@@ -11,7 +11,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          headerTitle: "Tuition Management",
+          headerShown: false,
           title: "Home",
           headerTintColor: "#FF5700",
           tabBarIcon: ({ color }) => (
