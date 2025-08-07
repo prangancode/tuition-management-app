@@ -74,7 +74,9 @@ const ConnectScreen = () => {
         </View>
       </View>
 
-      <AddStudentForm />
+      <View className="px-4 mt-4">
+        <AddStudentForm />
+      </View>
     </SafeAreaView>
   );
 };
