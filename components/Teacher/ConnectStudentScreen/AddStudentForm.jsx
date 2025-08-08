@@ -25,7 +25,7 @@ const AddStudentForm = () => {
 
   return (
     <View className="bg-white  px-4 pt-6 pb-8 flex flex-col rounded-2xl">
-      <View className=" bg-purple-500 rounded-3xl mb-4 shadow-xl items-center">
+      <View className="rounded-3xl mb-4 shadow-xl items-center">
         <Ionicons name="sparkles-outline" size={40} color="#800080" />
       </View>
 

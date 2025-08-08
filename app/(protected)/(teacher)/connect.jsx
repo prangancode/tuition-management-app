@@ -22,7 +22,7 @@ const ConnectScreen = () => {
     <SafeAreaView>
       <View className=" bg-gray-400  px-4 pt-6 pb-8  rounded-bl-3xl rounded-br-3xl">
         {/* Header */}
-        <View className="flex-row items-center gap-3 mb-6 bg-gray-300">
+        <View className="flex-row items-center gap-3 mb-6">
           <View className="w-12 h-12 bg-white/10 rounded-2xl items-center justify-center">
             <Ionicons name="person-add" size={24} color="white" />
           </View>

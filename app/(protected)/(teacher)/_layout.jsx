@@ -31,7 +31,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="connect"
         options={{
-          title: "Connect",
+          headerShown: false,
           tabBarIcon: ({ color }) => (
             <AntDesign name="plus" size={24} color={color} />
           ),
