@@ -40,7 +40,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="schedule"
         options={{
-          title: "Schedule",
+          headerShown: false,
           tabBarIcon: ({ color }) => (
             <Feather name="bell" size={24} color={color} />
           ),
