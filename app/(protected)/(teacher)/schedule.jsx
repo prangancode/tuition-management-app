@@ -61,7 +61,7 @@ const ScheduleScreen = () => {
     <SafeAreaView className="flex-1 bg-white">
       <ScrollView contentContainerClassName="pb-8">
         {/* Header */}
-        <View className="bg-gray-400 p-4 rounded-b-2xl">
+        <View className="bg-indigo-600 p-4 rounded-b-2xl">
           <View className="flex-row justify-between items-center">
             <Text className="text-white text-lg font-bold">Schedule</Text>
             <TouchableOpacity className="bg-white px-3 py-1 rounded-lg flex-row items-center">

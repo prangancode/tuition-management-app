@@ -22,7 +22,10 @@ export default function TabLayout() {
       <Tabs.Screen
         name="students"
         options={{
-          title: "Students",
+          // headerShown: true, // must be true for background color
+          // headerTitle: "", // hides the text
+          // headerStyle: { backgroundColor: "green" },
+          headerShown: false,
           tabBarIcon: ({ color }) => (
             <Feather name="users" size={24} color={color} />
           ),
@@ -42,7 +45,7 @@ export default function TabLayout() {
         options={{
           headerShown: false,
           tabBarIcon: ({ color }) => (
-            <Feather name="bell" size={24} color={color} />
+            <Feather name="calendar" size={24} color={color} />
           ),
         }}
       />
