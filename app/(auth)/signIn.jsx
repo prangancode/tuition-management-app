@@ -12,14 +12,24 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useDispatch } from "react-redux";
 
 const loginHero = require("../../assets/images/auth/login.png");
 
 export default function SignIn() {
+  const dispatch = useDispatch();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
+
+  const handleLogin = () => {
+    // if (!email.trim() || !password) return;
+    dispatch({
+      type: "LOGIN",
+      payload: { loginData: { email: email.trim(), password } },
+    });
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -117,7 +127,10 @@ export default function SignIn() {
 
               {/* CTA + Social + Register */}
               <View className="mt-6">
-                <Pressable className="h-14 rounded-[28px] bg-[#1E6DFF] items-center justify-center">
+                <Pressable
+                  onPress={handleLogin}
+                  className="h-14 rounded-[28px] bg-[#1E6DFF] items-center justify-center"
+                >
                   <Text className="text-white text-[16px] font-semibold">
                     Login
                   </Text>
