@@ -10,27 +10,19 @@ import {
 } from "react-native";
 import { Ionicons, Feather } from "@expo/vector-icons";
 
-const formatId = (raw) => {
-  const digits = (raw || "").replace(/\D/g, "").slice(0, 12);
-  const parts = [
-    digits.slice(0, 4),
-    digits.slice(4, 8),
-    digits.slice(8, 12),
-  ].filter(Boolean);
-  return { digits, display: parts.join("-") };
-};
+const onlyDigits = (s = "") => s.replace(/\D/g, "").slice(0, 11); // max 11 digits
 
 const AddStudentForm = () => {
   const [studentDigits, setStudentDigits] = useState("");
   const [isConnecting, setIsConnecting] = useState(false);
   const [touched, setTouched] = useState(false);
 
-  const { display } = useMemo(() => formatId(studentDigits), [studentDigits]);
-  const isValid = studentDigits.length === 12;
+  const display = useMemo(() => `S${studentDigits}`, [studentDigits]);
+  const charCount = 1 + studentDigits.length; // S + digits
+  const isValid = studentDigits.length === 11;
 
   const onChange = (text) => {
-    const { digits } = formatId(text);
-    setStudentDigits(digits);
+    setStudentDigits(onlyDigits(text));
     if (!touched) setTouched(true);
   };
 
@@ -41,14 +33,14 @@ const AddStudentForm = () => {
     setIsConnecting(true);
     setTimeout(() => {
       setIsConnecting(false);
-      alert(`Request sent to ID: ${studentDigits}`);
+      alert(`Request sent to ID: ${display}`);
     }, 1200);
   };
 
   const showError = touched && !isValid && studentDigits.length > 0;
 
   return (
-    <View className="bg-white px-4 pt-6 pb-6 rounded-2xl ">
+    <View className="bg-white px-4 pt-6 pb-6 rounded-2xl">
       {/* Top icon + title */}
       <View className="items-center mb-4">
         <View
@@ -63,7 +55,8 @@ const AddStudentForm = () => {
         Add New Student
       </Text>
       <Text className="text-gray-600 text-center mt-1">
-        Enter the student's unique 12-digit ID to send a connection request
+        Enter the student's unique ID (S + 11 digits) to send a connection
+        request
       </Text>
 
       {/* Input */}
@@ -73,23 +66,32 @@ const AddStudentForm = () => {
           <Text
             className={`text-xs ${isValid ? "text-emerald-600" : "text-gray-400"}`}
           >
-            {studentDigits.length}/12
+            {charCount}/12
           </Text>
         </View>
 
         <View style={styles.inputWrap}>
-          <Ionicons name="id-card-outline" size={18} color="#6B7280" />
+          {/* search icon (changed from id-card) */}
+          <Feather name="search" size={18} color="#6B7280" />
+
+          {/* fixed prefix S */}
+          <Text style={styles.prefix}>S</Text>
+
+          {/* numeric input for the 11 digits */}
           <TextInput
-            value={display}
+            value={studentDigits}
             onChangeText={onChange}
-            placeholder="0000-0000-0000"
+            placeholder="00000000000"
             placeholderTextColor="#9CA3AF"
             keyboardType="number-pad"
             returnKeyType="done"
-            maxLength={14} // includes hyphens visually
+            maxLength={11}
             style={styles.input}
             onBlur={() => setTouched(true)}
+            // Optional: submit from keyboard
+            onSubmitEditing={handleConnect}
           />
+
           {studentDigits.length > 0 && (
             <TouchableOpacity
               onPress={handleClear}
@@ -102,7 +104,7 @@ const AddStudentForm = () => {
 
         {showError && (
           <Text className="text-rose-600 text-xs mt-1">
-            ID must be exactly 12 digits.
+            ID must be exactly: S + 11 digits (e.g., S01734627514).
           </Text>
         )}
 
@@ -128,22 +130,20 @@ const AddStudentForm = () => {
         ) : (
           <>
             <Ionicons name="send-outline" size={16} color="#fff" />
-            <Text style={styles.buttonText}>Send Connection Request</Text>
+            <Text style={styles.buttonText}>Search student</Text>
           </>
         )}
       </Pressable>
 
-      {/* optional sample chips (keep/remove as you like) */}
+      {/* sample chips */}
       <View className="flex-row flex-wrap mt-4">
-        {["123456789012", "987654321000"].map((id) => (
+        {["S01734627514", "S98765432100"].map((id) => (
           <TouchableOpacity
             key={id}
             onPress={() => onChange(id)}
             className="px-3 py-1.5 mr-2 mb-2 rounded-full bg-gray-100"
           >
-            <Text className="text-gray-700 text-xs tracking-wider">
-              {formatId(id).display}
-            </Text>
+            <Text className="text-gray-700 text-xs tracking-wider">{id}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -170,6 +170,12 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     borderColor: "#E5E7EB",
+  },
+  prefix: {
+    color: "#111827",
+    fontSize: 18,
+    fontWeight: "600",
+    letterSpacing: 1,
   },
   input: {
     flex: 1,
