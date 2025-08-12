@@ -7,9 +7,11 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { Ionicons, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 const StudentDetails = () => {
-  // Demo data — replace with your real studentDetails
+  const router = useRouter();
+  // Demo data
   const studentDetails = {
     name: "Jamal Karim",
     email: "jamal@example.com",
@@ -26,6 +28,7 @@ const StudentDetails = () => {
     setTimeout(() => {
       setIsConnecting(false);
       // just a demo; hook your saga/callback here
+      router.push("/tuitionDetailsForm");
     }, 1000);
   };
 
