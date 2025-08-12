@@ -1,7 +1,21 @@
 import { View, Text, Image, TouchableOpacity } from "react-native";
 import { Feather, Ionicons } from "@expo/vector-icons";
+import { useDispatch } from "react-redux";
+import { useRouter } from "expo-router";
 
 const Header = () => {
+  const dispatch = useDispatch();
+
+  const router = useRouter();
+
+  const onLogout = () => {
+    dispatch({
+      type: "LOGOUT",
+      payload: {
+        navigate: (path) => router.replace(path),
+      },
+    });
+  };
   return (
     <View className="flex-row items-center justify-between ">
       <View className="flex-row items-center ">
@@ -26,6 +40,13 @@ const Header = () => {
         <TouchableOpacity className="p-2 rounded-full bg-white/10 relative">
           <Ionicons name="notifications-outline" size={20} color="white" />
           <View className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={onLogout}
+          className="p-2 rounded-full bg-white/10"
+        >
+          <Ionicons name="log-out-outline" size={20} color="white" />
         </TouchableOpacity>
       </View>
     </View>

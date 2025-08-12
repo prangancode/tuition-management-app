@@ -1,9 +1,10 @@
 import { Stack, router, Redirect } from "expo-router";
+import useAuth from "../../hooks/useAuth";
 
 export default function AppLayout() {
-  const isSignedIn = false;
+  const { user } = useAuth();
 
-  if (isSignedIn === false) {
+  if (!user) {
     return <Redirect href={"/welcome"} />;
   }
 

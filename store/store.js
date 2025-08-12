@@ -12,7 +12,7 @@ const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);
 
 export const store = configureStore({
   reducer: {
-    auth: persistedAuthReducer, // <- only this slice is persisted
+    auth: persistedAuthReducer, // only this is persisted
   },
   middleware: (getDefault) =>
     getDefault({
@@ -26,6 +26,7 @@ export const store = configureStore({
           "persist/PURGE",
           "persist/REGISTER",
         ],
+        ignoredActionPaths: ["payload.navigate"],
       },
     }).concat(sagaMiddleware),
 });

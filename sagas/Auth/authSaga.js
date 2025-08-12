@@ -31,7 +31,7 @@ function* clearToken() {
 
 // Login Saga
 function* loginSaga({ payload }) {
-  const { loginData } = payload;
+  const { loginData, navigate } = payload || {};
   try {
     yield put(loginStart());
 
@@ -50,6 +50,12 @@ function* loginSaga({ payload }) {
     // persist token for fetcher and keep in Redux (persisted slice)
     yield call(setToken, data.token);
     yield put(loginSuccess(data));
+
+    // role-based redirect
+    if (navigate) {
+      const dest = data?.user?.role === "teacher" ? "/" : "/home";
+      yield call(navigate, dest);
+    }
   } catch (error) {
     const message = error.message || "Login failed.";
     yield put(loginFailure(message));
@@ -81,13 +87,21 @@ function* registerSaga({ payload }) {
   }
 }
 
-function* logoutSaga() {
+function* logoutSaga({ payload }) {
+  const { navigate } = payload || {};
   // Clear device token + reset Redux state
   yield call(clearToken);
   yield put(signedOut());
 
-  // OPTIONAL: fully wipe persisted auth from storage (off by default)
+  // OPTIONAL: wipe persisted state (keep if you want a hard reset)
   yield call(purgeStoredState, authPersistConfig);
+
+  // Navigate back to Welcome
+  if (navigate) {
+    // pick the one that matches your folder:
+    const dest = "/(auth)/welcome"; // or "/welcome"
+    yield call(navigate, dest);
+  }
 }
 
 // Root Auth Saga

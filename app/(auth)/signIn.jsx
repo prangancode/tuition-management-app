@@ -9,25 +9,32 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 const loginHero = require("../../assets/images/auth/login.png");
 
 export default function SignIn() {
+  const loading = useSelector((state) => state.auth.loading);
   const dispatch = useDispatch();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
 
+  const isDisabled = loading || !email.trim() || !password;
+
   const handleLogin = () => {
-    // if (!email.trim() || !password) return;
+    if (isDisabled) return;
     dispatch({
       type: "LOGIN",
-      payload: { loginData: { email: email.trim(), password } },
+      payload: {
+        loginData: { email: email.trim(), password },
+        navigate: (path) => router.replace(path),
+      },
     });
   };
 
@@ -129,11 +136,18 @@ export default function SignIn() {
               <View className="mt-6">
                 <Pressable
                   onPress={handleLogin}
-                  className="h-14 rounded-[28px] bg-[#1E6DFF] items-center justify-center"
+                  disabled={isDisabled}
+                  className={`h-14 rounded-[28px] items-center justify-center ${
+                    isDisabled ? "bg-[#1E6DFF]/60" : "bg-[#1E6DFF]"
+                  }`}
                 >
-                  <Text className="text-white text-[16px] font-semibold">
-                    Login
-                  </Text>
+                  {loading ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text className="text-white text-[16px] font-semibold">
+                      Login
+                    </Text>
+                  )}
                 </Pressable>
 
                 <View className="mt-7 flex-row items-center">
