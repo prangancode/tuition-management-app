@@ -15,6 +15,10 @@ export default function AppLayout() {
         name="groupSelector"
         options={{ animation: "slide_from_bottom", headerShown: false }}
       /> */}
+      <Stack.Screen
+        name="tuitionDetailsForm"
+        options={{ headerShown: false }}
+      />
     </Stack>
   );
 }
