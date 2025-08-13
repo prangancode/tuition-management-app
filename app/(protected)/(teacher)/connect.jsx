@@ -11,6 +11,7 @@ import {
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import AddStudentForm from "../../../components/Teacher/ConnectStudentScreen/AddStudentForm";
 import StudentDetails from "../../../components/Teacher/ConnectStudentScreen/StudentDetails";
+import TuitionDetails from "../../../components/Teacher/ConnectStudentScreen/TuitionDetails";
 
 const METHODS = [
   {
@@ -119,6 +120,7 @@ const ConnectScreen = () => {
 
               <AddStudentForm />
               <StudentDetails />
+              <TuitionDetails />
             </View>
 
             <View className="mt-3">
