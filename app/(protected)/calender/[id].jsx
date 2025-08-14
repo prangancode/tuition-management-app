@@ -6,15 +6,16 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, Stack } from "expo-router";
 
 /* ---------- Dummy data (swap with API/store) ---------- */
 const STUDENTS = [
-  { id: "1", name: "Sarah Johnson" },
-  { id: "2", name: "Michael Chen" },
-  { id: "3", name: "Alex Thompson" },
+  { id: "1", name: "Sarah Johnson", custom_id: "S0182727334" },
+  { id: "2", name: "Michael Chen", custom_id: "S0171111222" },
+  { id: "3", name: "Alex Thompson", custom_id: "S0199999000" },
 ];
 
 // date: [{ id, name, time, avatar }]
@@ -62,7 +63,7 @@ const MONTHS = [
   "November",
   "December",
 ];
-const DOW_LETTERS = ["M", "T", "W", "T", "F", "S", "S"]; // Monday first
+const DOW_LETTERS = ["M", "T", "W", "T", "F", "S", "S"]; // Monday-first
 
 const isToday = (d) => {
   const t = new Date();
@@ -75,11 +76,10 @@ const isToday = (d) => {
 const ymd = (d) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
-// Monday-first 6x7 grid
 function makeGrid(year, month) {
   const out = [];
   const first = new Date(year, month, 1);
-  const monIndex = (first.getDay() + 6) % 7; // 0..6, Mon=0
+  const monIndex = (first.getDay() + 6) % 7; // Mon=0
   const start = new Date(year, month, 1 - monIndex);
   for (let i = 0; i < 42; i++) {
     const d = new Date(start);
@@ -88,13 +88,13 @@ function makeGrid(year, month) {
       date: d,
       inMonth: d.getMonth() === month,
       isToday: isToday(d),
-      key: `${i}-${d.getTime()}`, // unique and stable
+      key: `${i}-${d.getTime()}`,
     });
   }
   return out;
 }
 
-/* ---------- Tiny bits ---------- */
+/* ---------- Small bits ---------- */
 const EventRow = ({ name, time, avatar, onPress }) => (
   <TouchableOpacity
     activeOpacity={0.9}
@@ -111,7 +111,6 @@ const EventRow = ({ name, time, avatar, onPress }) => (
         <Ionicons name="person" size={16} color="#374151" />
       </View>
     )}
-
     <View className="flex-1">
       <Text className="text-[14px] font-semibold text-gray-900">{name}</Text>
       <View className="mt-1 self-start px-2 py-0.5 rounded-md bg-gray-100 flex-row items-center">
@@ -119,7 +118,6 @@ const EventRow = ({ name, time, avatar, onPress }) => (
         <Text className="ml-1 text-[11px] text-gray-700">{time}</Text>
       </View>
     </View>
-
     <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
   </TouchableOpacity>
 );
@@ -127,9 +125,12 @@ const EventRow = ({ name, time, avatar, onPress }) => (
 /* ---------- Screen ---------- */
 export default function StudentCalendarScreen() {
   const { id } = useLocalSearchParams();
-  const student = STUDENTS.find((s) => s.id === id) || { name: "Student" };
+  const student = STUDENTS.find((s) => s.id === id) || {
+    name: "Student",
+    custom_id: "S0000000000",
+  };
 
-  // ▶ Default to **current** month/year/day
+  // current month/year/day
   const today = new Date();
   const [month, setMonth] = useState(today.getMonth());
   const [year, setYear] = useState(today.getFullYear());
@@ -140,23 +141,9 @@ export default function StudentCalendarScreen() {
   const eventsForSelectedDay = EVENTS[selectedDate] || [];
 
   const goPrev = () =>
-    setMonth((m) => {
-      if (m === 0) {
-        setYear((y) => y - 1);
-        return 11;
-      }
-      return m - 1;
-    });
-
+    setMonth((m) => (m === 0 ? (setYear((y) => y - 1), 11) : m - 1));
   const goNext = () =>
-    setMonth((m) => {
-      if (m === 11) {
-        setYear((y) => y + 1);
-        return 0;
-      }
-      return m + 1;
-    });
-
+    setMonth((m) => (m === 11 ? (setYear((y) => y + 1), 0) : m + 1));
   const goToday = () => {
     const t = new Date();
     setMonth(t.getMonth());
@@ -166,13 +153,60 @@ export default function StudentCalendarScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <Stack.Screen
-        options={{ title: `${student.name} • Calendar`, headerShown: false }}
-      />
+      <Stack.Screen options={{ headerShown: false }} />
+
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 28 }}>
-        {/* Month header */}
+        {/* ===== Minimal playful header ===== */}
+        <View className="mb-3">
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center">
+              <Ionicons
+                name="calendar-clear-outline"
+                size={18}
+                color="#4F46E5"
+              />
+              <Text className="ml-2 text-[16px] font-extrabold text-gray-900">
+                {student.name} · Calendar
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              onPress={() =>
+                Alert.alert("Add Event", "Open your event form here")
+              }
+              className="px-3 py-2 rounded-xl flex-row items-center"
+              style={{ backgroundColor: "#EEF2FF" }}
+            >
+              <Ionicons name="add-circle" size={18} color="#4F46E5" />
+              <Text
+                className="ml-1 text-[13px] font-semibold"
+                style={{ color: "#4F46E5" }}
+              >
+                Add Event
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* playful ID pill */}
+          <View
+            className="mt-2 self-start px-2.5 py-1 rounded-full flex-row items-center"
+            style={{ backgroundColor: "#F1F5F9" }}
+          >
+            <Ionicons name="card-outline" size={12} color="#334155" />
+            <Text
+              className="ml-1 text-[11px] font-semibold"
+              style={{ color: "#334155" }}
+            >
+              {student.custom_id}
+            </Text>
+          </View>
+        </View>
+
+        {/* Month controls */}
         <View className="flex-row items-center justify-between mb-3">
-          <Text className="text-[16px] font-bold text-gray-900">{title}</Text>
+          <Text className="text-[13px] font-semibold text-gray-700">
+            {title}
+          </Text>
           <View className="flex-row items-center">
             <TouchableOpacity className="px-2 py-1 rounded-lg" onPress={goPrev}>
               <Ionicons name="chevron-back" size={18} color="#6B7280" />
@@ -187,21 +221,16 @@ export default function StudentCalendarScreen() {
         <View className="rounded-2xl border border-gray-200 bg-white shadow-sm">
           {/* Week letters */}
           <View className="flex-row justify-between px-4 pt-4 pb-2">
-            {DOW_LETTERS.map(
-              (
-                l,
-                i /* ✅ use index as key to avoid duplicate key warning */
-              ) => (
-                <View key={i} className="w-10 items-center">
-                  <Text className="text-[11px] tracking-wider text-gray-400">
-                    {l}
-                  </Text>
-                </View>
-              )
-            )}
+            {DOW_LETTERS.map((l, i) => (
+              <View key={i} className="w-10 items-center">
+                <Text className="text-[11px] tracking-wider text-gray-400">
+                  {l}
+                </Text>
+              </View>
+            ))}
           </View>
 
-          {/* Day grid (6 rows) */}
+          {/* Day grid */}
           <View className="px-3 pb-4">
             {Array.from({ length: 6 }).map((_, row) => (
               <View
@@ -230,8 +259,6 @@ export default function StudentCalendarScreen() {
                       key={cell.key}
                       className="py-2 w-10 items-center"
                       onPress={() => setSelectedDate(key)}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Select ${cell.date.toDateString()}`}
                     >
                       <View className={ballClasses}>
                         <Text
@@ -241,14 +268,12 @@ export default function StudentCalendarScreen() {
                           {cell.date.getDate()}
                         </Text>
                       </View>
-
-                      {/* event dot */}
                       {hasEvents ? (
                         <View
                           className="w-1.5 h-1.5 rounded-full mt-1"
                           style={{
-                            backgroundColor: selected ? "#FFFFFF" : "#111827",
-                            opacity: selected ? 0.9 : 0.6,
+                            backgroundColor: selected ? "#111827" : "#4F46E5",
+                            opacity: selected ? 1 : 0.75,
                           }}
                         />
                       ) : (
