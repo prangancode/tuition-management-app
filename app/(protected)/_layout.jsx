@@ -19,6 +19,7 @@ export default function AppLayout() {
         name="tuitionDetailsForm"
         options={{ headerShown: false }}
       />
+      <Stack.Screen name="studentDetails" options={{ headerShown: false }} />
     </Stack>
   );
 }

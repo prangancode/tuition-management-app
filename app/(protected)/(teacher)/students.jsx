@@ -6,183 +6,244 @@ import {
   TouchableOpacity,
   TextInput,
   FlatList,
+  Alert,
 } from "react-native";
-import {
-  AntDesign,
-  Feather,
-  Ionicons,
-  MaterialCommunityIcons,
-} from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
-// ----- Data -----
+/* ------------ Sample Data ------------ */
 const STUDENTS = [
   {
     id: "1",
     name: "Sarah Johnson",
-    grade: "Grade 12",
+    email: "sarah.j@example.com",
+    custom_id: "S01734627514",
+    phone: "01734627514",
+    class_level: "Class 9",
     initials: "SJ",
     avatarColor: "#6D28D9",
     status: "active",
-    rating: "Excellent",
     subjects: ["Mathematics", "Physics"],
-    streakDays: 12,
-    totalClasses: 24,
-    topPerformer: true,
   },
   {
     id: "2",
     name: "Michael Chen",
-    grade: "Grade 11",
+    email: "michael.c@example.com",
+    custom_id: "S01987654321",
+    phone: "01812345678",
+    class_level: "Class 10",
     initials: "MC",
     avatarColor: "#10B981",
     status: "active",
-    rating: "Good",
     subjects: ["Chemistry", "Biology"],
-    streakDays: 8,
-    totalClasses: 32,
-    topPerformer: false,
   },
   {
     id: "3",
     name: "Alex Thompson",
-    grade: "Grade 12",
+    email: "alex.t@example.com",
+    custom_id: "S01234567890",
+    phone: "01699887766",
+    class_level: "Class 12",
     initials: "AT",
     avatarColor: "#F81D7F",
-    status: "active",
-    rating: "Excellent",
+    status: "pending",
     subjects: ["Advanced Mathematics"],
-    streakDays: 15,
-    totalClasses: 28,
-    topPerformer: true,
   },
   {
     id: "4",
     name: "Priya Das",
-    grade: "Grade 10",
+    email: "priya.d@example.com",
+    custom_id: "S01827363828",
+    phone: "01722223333",
+    class_level: "Class 8",
     initials: "PD",
     avatarColor: "#2563EB",
-    status: "pending",
-    rating: "—",
-    subjects: ["Mathematics"],
-    streakDays: 0,
-    totalClasses: 0,
-    topPerformer: false,
-  },
-  {
-    id: "5",
-    name: "Leo Martin",
-    grade: "Grade 12",
-    initials: "LM",
-    avatarColor: "#D97706",
     status: "archived",
-    rating: "Good",
-    subjects: ["Physics"],
-    streakDays: 0,
-    totalClasses: 18,
-    topPerformer: false,
+    subjects: ["Mathematics"],
   },
 ];
 
 const TABS = [
-  { key: "active", label: "Active" },
-  { key: "pending", label: "Pending" },
-  { key: "archived", label: "Archived" },
+  {
+    key: "active",
+    label: "Active",
+    icon: "checkmark-done-circle-outline",
+    color: "#10B981",
+  },
+  { key: "pending", label: "Pending", icon: "time-outline", color: "#F59E0B" },
+  {
+    key: "archived",
+    label: "Archived",
+    icon: "archive-outline",
+    color: "#6B7280",
+  },
 ];
 
-// ----- Small UI bits -----
-const RatingPill = ({ rating }) => {
-  const conf =
-    rating === "Excellent"
-      ? { bg: "bg-emerald-100", txt: "text-emerald-700", icon: "star-outline" }
-      : rating === "Good"
-        ? { bg: "bg-indigo-100", txt: "text-indigo-700", icon: "trending-up" }
-        : { bg: "bg-gray-100", txt: "text-gray-600", icon: "minus" };
-  return (
-    <View
-      className={`flex-row items-center px-2.5 py-1 rounded-full ${conf.bg}`}
-    >
-      <MaterialCommunityIcons name={conf.icon} size={14} color="black" />
-      <Text className={`ml-1 text-xs font-semibold ${conf.txt}`}>{rating}</Text>
-    </View>
-  );
-};
-
+/* ------------ Small UI bits ------------ */
 const StatusPill = ({ status }) => {
   const map = {
-    active: { bg: "bg-black", txt: "text-white", label: "Active" },
-    pending: { bg: "bg-amber-200", txt: "text-amber-900", label: "Pending" },
-    archived: { bg: "bg-gray-200", txt: "text-gray-700", label: "Archived" },
+    active: {
+      bg: "bg-emerald-100",
+      txt: "text-emerald-800",
+      ic: "checkmark-circle",
+      color: "#047857",
+    },
+    pending: {
+      bg: "bg-amber-100",
+      txt: "text-amber-800",
+      ic: "time",
+      color: "#92400E",
+    },
+    archived: {
+      bg: "bg-gray-100",
+      txt: "text-gray-800",
+      ic: "archive",
+      color: "#111827",
+    },
   }[status];
+
   return (
-    <View className={`px-2.5 py-1 rounded-full ${map.bg}`}>
-      <Text className={`text-xs font-semibold ${map.txt}`}>{map.label}</Text>
+    <View
+      className={`px-2.5 py-1.5 rounded-full flex-row items-center ${map.bg}`}
+    >
+      <Ionicons name={map.ic} size={14} color={map.color} />
+      <Text className={`ml-1 text-xs font-semibold ${map.txt}`}>
+        {status.charAt(0).toUpperCase() + status.slice(1)}
+      </Text>
     </View>
   );
 };
 
 const SubjectChip = ({ label }) => (
-  <View className="bg-indigo-50 px-3 py-1 rounded-full mr-2 mb-2">
-    <Text className="text-indigo-700 text-xs font-semibold">{label}</Text>
+  <View className="bg-indigo-50 px-3 py-1 rounded-full mr-2 mb-2 border border-indigo-100">
+    <Text className="text-indigo-700 text-[11px] font-semibold">{label}</Text>
   </View>
 );
 
-const StudentCard = ({ item }) => (
-  <View className="bg-white rounded-2xl p-4 mb-4 border border-gray-100 shadow">
-    <View className="flex-row justify-between">
-      <View className="flex-row items-center">
-        {/* Avatar */}
-        <View className="relative mr-3">
-          <View
-            className="w-12 h-12 rounded-full items-center justify-center"
-            style={{ backgroundColor: item.avatarColor }}
-          >
-            <Text className="text-white font-bold">{item.initials}</Text>
-          </View>
-          {item.topPerformer && (
-            <View className="absolute -right-1 -top-1 bg-amber-400 w-5 h-5 rounded-full items-center justify-center">
-              <AntDesign name="staro" size={12} color="white" />
-            </View>
-          )}
-        </View>
+const InfoCell = ({ icon, color, label, value }) => (
+  <View className="flex-row items-start gap-2 flex-1">
+    <View
+      className="w-8 h-8 rounded-xl items-center justify-center"
+      style={{ backgroundColor: `${color}22` }}
+    >
+      <Ionicons name={icon} size={16} color={color} />
+    </View>
+    <View className="flex-1">
+      <Text className="text-[11px] text-gray-500">{label}</Text>
+      <Text
+        className="text-[13px] font-semibold text-gray-900 mt-0.5"
+        numberOfLines={1}
+      >
+        {value}
+      </Text>
+    </View>
+  </View>
+);
 
+const ActionButton = ({ icon, color, bg, label, onPress }) => (
+  <TouchableOpacity
+    onPress={onPress}
+    className="flex-1 h-10 rounded-xl items-center justify-center flex-row gap-1"
+    style={{ backgroundColor: bg }}
+  >
+    <Ionicons name={icon} size={16} color={color} />
+    <Text className="text-[12px] font-semibold" style={{ color }}>
+      {label}
+    </Text>
+  </TouchableOpacity>
+);
+
+/* ------------ Card ------------ */
+const StudentCard = ({ item, onView, onEdit, onDelete }) => (
+  <View className="bg-white rounded-2xl p-4  border border-gray-100 shadow-sm">
+    {/* Top row: avatar, name/email, status */}
+    <View className="flex-row justify-between items-start">
+      <View className="flex-row items-center">
+        <View
+          className="w-12 h-12 rounded-full items-center justify-center mr-3"
+          style={{ backgroundColor: item.avatarColor }}
+        >
+          <Text className="text-white font-bold">{item.initials}</Text>
+        </View>
         <View>
-          <Text className="text-lg font-semibold">{item.name}</Text>
-          <Text className="text-gray-500">{item.grade}</Text>
-          <View className="flex-row mt-2">
-            <RatingPill rating={item.rating} />
-            <View className="w-2" />
-            <StatusPill status={item.status} />
-          </View>
+          <Text className="text-[16px] font-semibold text-gray-900">
+            {item.name}
+          </Text>
+          <Text className="text-[12px] text-gray-500">{item.email}</Text>
         </View>
       </View>
+      <StatusPill status={item.status} />
+    </View>
 
-      <TouchableOpacity className="p-1">
-        <Feather name="more-vertical" size={18} color="#9CA3AF" />
-      </TouchableOpacity>
+    {/* Details grid */}
+    <View className="mt-3 gap-3">
+      <View className="flex-row gap-3">
+        <InfoCell
+          icon="card-outline"
+          color="#4F46E5"
+          label="Student ID"
+          value={item.custom_id}
+        />
+        <InfoCell
+          icon="call-outline"
+          color="#0EA5E9"
+          label="Phone"
+          value={item.phone}
+        />
+      </View>
+      <View className="flex-row gap-3">
+        <InfoCell
+          icon="school-outline"
+          color="#10B981"
+          label="Class Level"
+          value={item.class_level}
+        />
+        <View className="flex-1" />
+      </View>
     </View>
 
     {/* Subjects */}
     {item.subjects?.length ? (
-      <View className="flex-row flex-wrap mt-3">
-        {item.subjects.map((s) => (
-          <SubjectChip key={s} label={s} />
-        ))}
+      <View className="mt-3">
+        <Text className="text-[11px] text-gray-500 mb-1">Subjects</Text>
+        <View className="flex-row flex-wrap">
+          {item.subjects.map((s) => (
+            <SubjectChip key={s} label={s} />
+          ))}
+        </View>
       </View>
     ) : null}
 
-    {/* Bottom row (no progress bar) */}
-    <View className="flex-row justify-between items-center mt-3">
-      <View className="flex-row items-center">
-        <Text className="mr-1">🔥</Text>
-        <Text className="text-gray-600">{item.streakDays} day streak</Text>
-      </View>
-      <Text className="text-gray-600">{item.totalClasses} total classes</Text>
+    {/* Actions */}
+    <View className="mt-4 flex-row gap-2">
+      <ActionButton
+        icon="eye-outline"
+        label="View"
+        color="#0369A1"
+        bg="#E0F2FE"
+        onPress={() => onView(item)}
+      />
+      <ActionButton
+        icon="create-outline"
+        label="Edit"
+        color="#4338CA"
+        bg="#EDE9FE"
+        onPress={() => onEdit(item)}
+      />
+      <ActionButton
+        icon="trash-outline"
+        label="Delete"
+        color="#BE123C"
+        bg="#FFE4E6"
+        onPress={() => onDelete(item)}
+      />
     </View>
   </View>
 );
 
-// ----- Screen -----
+/* ------------ Screen ------------ */
 const StudentsScreen = () => {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("active");
   const [query, setQuery] = useState("");
 
@@ -196,30 +257,31 @@ const StudentsScreen = () => {
   );
 
   const filtered = useMemo(() => {
-    const list = STUDENTS.filter((s) => s.status === activeTab);
-    if (!query.trim()) return list;
+    const base = STUDENTS.filter((s) => s.status === activeTab);
+    if (!query.trim()) return base;
     const q = query.toLowerCase();
-    return list.filter(
+    return base.filter(
       (s) =>
         s.name.toLowerCase().includes(q) ||
+        s.email.toLowerCase().includes(q) ||
+        s.custom_id.toLowerCase().includes(q) ||
+        s.phone.toLowerCase().includes(q) ||
         s.subjects?.some((sub) => sub.toLowerCase().includes(q))
     );
   }, [activeTab, query]);
 
-  // Header + tabs (used as FlatList header)
+  const onView = () => router.push("/studentDetails");
+  const onEdit = (item) => Alert.alert("Edit", `Edit ${item.name}`);
+  const onDelete = (item) => Alert.alert("Delete", `Delete ${item.name}?`);
+
   const Header = (
     <>
-      {/* Green header */}
-      <View className="bg-emerald-600 px-4 pt-2 pb-5 rounded-b-2xl">
+      {/* Hero header */}
+      <View className="bg-emerald-600 px-4 pt-5 pb-6 rounded-b-2xl">
         <View className="flex-row justify-between items-center">
-          <View>
-            <Text className="text-white text-2xl font-extrabold">
-              My Students
-            </Text>
-            <Text className="text-white/90 mt-1">
-              {STUDENTS.length} amazing learners
-            </Text>
-          </View>
+          <Text className="text-white text-2xl font-extrabold">
+            My Students
+          </Text>
           <TouchableOpacity className="bg-white/90 px-3 py-2 rounded-xl flex-row items-center">
             <Ionicons name="person-add-outline" size={16} color="#111827" />
             <Text className="ml-1 font-semibold text-gray-900">Add</Text>
@@ -232,7 +294,7 @@ const StudentsScreen = () => {
           <TextInput
             value={query}
             onChangeText={setQuery}
-            placeholder="Search students, subjects..."
+            placeholder="Search by name, email, ID, phone, subject…"
             placeholderTextColor="rgba(255,255,255,0.8)"
             className="ml-2 text-white flex-1"
           />
@@ -249,18 +311,28 @@ const StudentsScreen = () => {
                 <TouchableOpacity
                   key={t.key}
                   onPress={() => setActiveTab(t.key)}
-                  className={`px-4 py-2 rounded-full mr-2 ${
-                    isActive ? "bg-emerald-100" : "bg-transparent"
+                  className={`flex-row items-center px-3 py-2 rounded-xl mr-2 ${
+                    isActive ? "" : "opacity-70"
                   }`}
+                  style={{
+                    backgroundColor: isActive ? `${t.color}22` : "transparent",
+                  }}
                 >
+                  <Ionicons name={t.icon} size={16} color={t.color} />
                   <Text
-                    className={`${isActive ? "text-emerald-700" : "text-gray-600"} font-semibold`}
+                    className="ml-1 font-semibold"
+                    style={{ color: t.color }}
                   >
-                    {t.label}{" "}
-                    <Text className="text-gray-400 font-normal">
-                      {counts[t.key] ? ` ${counts[t.key]}` : ""}
-                    </Text>
+                    {t.label}
                   </Text>
+                  <View
+                    className="ml-2 px-1.5 rounded-md"
+                    style={{ backgroundColor: `${t.color}22` }}
+                  >
+                    <Text className="text-[11px]" style={{ color: t.color }}>
+                      {counts[t.key] || 0}
+                    </Text>
+                  </View>
                 </TouchableOpacity>
               );
             })}
@@ -277,13 +349,17 @@ const StudentsScreen = () => {
         keyExtractor={(it) => it.id}
         renderItem={({ item }) => (
           <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
-            <StudentCard item={item} />
+            <StudentCard
+              item={item}
+              onView={onView}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
           </View>
         )}
         ListHeaderComponent={Header}
         ListFooterComponent={<View style={{ height: 16 }} />}
         contentContainerStyle={{ paddingBottom: 24 }}
-        style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
