@@ -1,4 +1,5 @@
-import { SafeAreaView, View } from "react-native";
+import React from "react";
+import { SafeAreaView, View, ScrollView } from "react-native";
 import Header from "../../../components/Teacher/HomeScreen/Header";
 import QuickSummary from "../../../components/Teacher/HomeScreen/QuickSummary";
 import StatsGrid from "../../../components/Teacher/HomeScreen/StatsGrid";
@@ -6,23 +7,27 @@ import TodaysSchedule from "../../../components/Teacher/HomeScreen/TodaysSchedul
 
 const HomeScreen = () => {
   return (
-    <>
-      <SafeAreaView>
-        <View className="bg-gray-400 pt-6 pb-8 px-4 rounded-bl-3xl rounded-br-3xl">
-          {/* Header */}
+    <SafeAreaView className="flex-1 bg-white">
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 24 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Decorative hero cap */}
+        <View className="px-4 pt-6 pb-8 rounded-b-3xl bg-indigo-600">
           <Header />
-
-          {/* Quick Summary */}
           <QuickSummary />
         </View>
 
-        {/* Stats */}
-        <StatsGrid />
+        {/* Lifted content wrapper so cards feel layered */}
+        <View className="-mt-6 px-4">
+          <StatsGrid />
 
-        {/* Schedule Events */}
-        <TodaysSchedule />
-      </SafeAreaView>
-    </>
+          <View className="mt-6">
+            <TodaysSchedule />
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 

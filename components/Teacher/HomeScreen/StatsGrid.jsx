@@ -1,95 +1,84 @@
 import React from "react";
 import { View, Text, FlatList } from "react-native";
-import { Feather, Ionicons } from "@expo/vector-icons";
-import { TouchableOpacity } from "react-native";
+import { Feather } from "@expo/vector-icons";
 
-// Define the icon to use for each stat, with unique solid background color for the icon
 const stats = [
   {
     label: "Students",
     value: "48",
-    icon: "users", // Feather
-    iconLib: Feather,
-    iconBg: "bg-blue-500",
-    change: "+2",
-    bg: "from-blue-50 to-purple-50",
-    changeColor: "text-blue-600 bg-blue-50",
+    icon: "users",
+    tint: "#3B82F6", // blue
+    chip: "+2 today",
   },
   {
     label: "Revenue",
     value: "$9.2k",
-    icon: "dollar-sign", // Feather
-    iconLib: Feather,
-    iconBg: "bg-emerald-500",
-    change: "+12%",
-    bg: "from-emerald-50 to-teal-50",
-    changeColor: "text-emerald-600 bg-emerald-50",
+    icon: "dollar-sign",
+    tint: "#10B981", // emerald
+    chip: "+12%",
   },
   {
     label: "Classes",
     value: "12",
-    icon: "book-open", // Feather
-    iconLib: Feather,
-    iconBg: "bg-orange-500",
-    change: "3 today",
-    bg: "from-orange-50 to-red-50",
-    changeColor: "text-orange-600 bg-orange-50",
+    icon: "book-open",
+    tint: "#F59E0B", // amber
+    chip: "3 today",
   },
   {
     label: "Completion",
     value: "94%",
-    icon: "trending-up", // Feather
-    iconLib: Feather,
-    iconBg: "bg-pink-500",
-    change: "+8%",
-    bg: "from-pink-50 to-rose-50",
-    changeColor: "text-pink-600 bg-pink-50",
+    icon: "trending-up",
+    tint: "#EC4899", // pink
+    chip: "+8%",
   },
 ];
+
+const Card = ({ item }) => {
+  return (
+    <View className="flex-1 rounded-2xl bg-white border border-gray-100 shadow-sm p-4 overflow-hidden">
+      {/* soft backdrop blob */}
+      <View
+        className="absolute -top-6 -right-6 w-24 h-24 rounded-full opacity-10"
+        style={{ backgroundColor: item.tint }}
+      />
+      <View
+        className="absolute -bottom-8 -left-8 w-28 h-28 rounded-full opacity-10"
+        style={{ backgroundColor: item.tint }}
+      />
+
+      <View className="flex-row items-center justify-between">
+        <View
+          className="p-2 rounded-xl"
+          style={{ backgroundColor: item.tint + "22" }}
+        >
+          <Feather name={item.icon} size={16} color={item.tint} />
+        </View>
+        <Text
+          className="px-2 py-1 rounded-full text-[11px] font-semibold"
+          style={{ color: item.tint, backgroundColor: item.tint + "14" }}
+        >
+          {item.chip}
+        </Text>
+      </View>
+
+      <Text className="mt-3 text-2xl font-bold text-gray-900">
+        {item.value}
+      </Text>
+      <Text className="text-xs text-gray-600 mt-0.5">{item.label}</Text>
+    </View>
+  );
+};
 
 const StatsGrid = () => {
   return (
     <FlatList
       data={stats}
-      keyExtractor={(item) => item.label}
+      keyExtractor={(it) => it.label}
       numColumns={2}
-      showsVerticalScrollIndicator={false}
+      scrollEnabled={false}
       columnWrapperStyle={{ gap: 12 }}
-      contentContainerStyle={{ gap: 12, paddingHorizontal: 16 }}
-      renderItem={({ item }) => {
-        const Icon = item.iconLib;
-        return (
-          <View
-            className="flex-1 bg-white rounded-2xl p-4 relative 
-          shadow border border-gray-100 overflow-hidden mt-4"
-          >
-            {/* Background color layer */}
-            <View
-              className={`absolute inset-0 bg-gradient-to-br ${item.bg} opacity-30 rounded-2xl`}
-            />
-
-            {/* Content */}
-            <View className="relative">
-              <View className="flex-row justify-between items-center mb-3">
-                <View className={`p-2 rounded-xl ${item.iconBg} shadow`}>
-                  <Icon name={item.icon} size={16} color="white" />
-                </View>
-
-                <Text
-                  className={`text-xs font-semibold px-2 py-1 rounded-full ${item.changeColor}`}
-                >
-                  {item.change}
-                </Text>
-              </View>
-
-              <Text className="text-2xl font-bold text-gray-900">
-                {item.value}
-              </Text>
-              <Text className="text-xs text-gray-600 mt-1">{item.label}</Text>
-            </View>
-          </View>
-        );
-      }}
+      contentContainerStyle={{ gap: 12 }}
+      renderItem={({ item }) => <Card item={item} />}
     />
   );
 };
