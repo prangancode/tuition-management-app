@@ -192,7 +192,7 @@ const TuitionDetails = () => {
           {!tuitionDetails ? (
             <View className="py-6">
               <SectionTitle icon="reader-outline" title="Overview" />
-              <Text className="text-[13px] text-gray-500">
+              <Text className="text-[13px] text-gray-500 mt-2">
                 No tuition details found for this student yet.
               </Text>
             </View>

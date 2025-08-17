@@ -32,6 +32,7 @@ const METHODS = [
 ];
 
 const ConnectScreen = () => {
+  const [studentDigits, setStudentDigits] = useState("");
   const { studentDetails } = useSelector((state) => state.connectStudents);
   const [activeKey, setActiveKey] = useState("id");
 
@@ -120,20 +121,16 @@ const ConnectScreen = () => {
                 </Text>
               </View>
 
-              <AddStudentForm />
-              {studentDetails && (
+              <AddStudentForm
+                studentDigits={studentDigits}
+                setStudentDigits={setStudentDigits}
+              />
+              {studentDetails && studentDigits && (
                 <>
                   <StudentDetails />
                   <TuitionDetails />
                 </>
               )}
-            </View>
-
-            <View className="mt-3">
-              <Text className="text-gray-500 text-xs">
-                Tip: Students can find their QR code or ID from their profile
-                screen.
-              </Text>
             </View>
           </View>
         </ScrollView>

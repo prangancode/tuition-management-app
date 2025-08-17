@@ -1,15 +1,17 @@
-import React, { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { View, Text, Pressable, TouchableOpacity } from "react-native";
 import { Ionicons, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
 import StudentDetailsSkeleton from "./StudentDetailsSkeleton";
 import { getConnectionButtonState } from "../../../utils/connectionStatusUtils";
+import { notify } from "../../../helpers/toast";
 
 const StudentDetails = () => {
   const dispatch = useDispatch();
   const {
     studentDetails: studentInfo,
+    tuitionDetails,
     loading,
     connectionStatus,
     connectionStatusLoading,
@@ -23,16 +25,20 @@ const StudentDetails = () => {
     icon: Icon,
   } = getConnectionButtonState(connectionStatus);
 
-  const [isConnecting, setIsConnecting] = useState(false);
-
   const handleConnect = () => {
-    if (isConnecting || statusDisabled || connectionStatusLoading) return;
-    setIsConnecting(true);
-    // Demo: hook Saga/callback here
-    setTimeout(() => {
-      setIsConnecting(false);
+    if (!tuitionDetails) {
+      notify.info("Tuition details", "submit tuition details first");
       router.push("/tuitionDetailsForm");
-    }, 1000);
+    } else {
+      dispatch({
+        type: "SEND_CONNECTION_REQUEST",
+        payload: {
+          student_id: studentInfo?.id,
+          custom_id: studentInfo?.custom_id,
+          tuition_details_id: tuitionDetails?.id,
+        },
+      });
+    }
   };
 
   // check connection status with a student regarding teacher
@@ -48,13 +54,9 @@ const StudentDetails = () => {
   if (loading) return <StudentDetailsSkeleton />;
 
   // --- Button state mirroring the web logic ---
-  const isDisabled = statusDisabled || isConnecting || connectionStatusLoading;
+  const isDisabled = statusDisabled || connectionStatusLoading;
 
-  const text = isConnecting
-    ? "Sending request..."
-    : connectionStatusLoading
-      ? "Loading..."
-      : label;
+  const text = connectionStatusLoading ? "Loading..." : label;
 
   // Fallback background based on status (works even if buttonClass is web-only)
   const statusBgClass = useMemo(() => {
@@ -181,7 +183,7 @@ const StudentDetails = () => {
             accessibilityRole="button"
             accessibilityState={{
               disabled: isDisabled,
-              busy: isConnecting || connectionStatusLoading,
+              busy: connectionStatusLoading,
             }}
           >
             {showIcon ? <RenderIcon size={18} color="#fff" /> : null}

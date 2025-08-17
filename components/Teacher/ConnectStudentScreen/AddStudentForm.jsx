@@ -9,14 +9,14 @@ import {
   Pressable,
 } from "react-native";
 import { Ionicons, Feather } from "@expo/vector-icons";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { clearFoundStudent } from "../../../slices/Teacher/ConnectStudents/connectStudentSlice";
 
 const onlyDigits = (s = "") => s.replace(/\D/g, "").slice(0, 11); // max 11 digits
 
-const AddStudentForm = () => {
+const AddStudentForm = ({ studentDigits, setStudentDigits }) => {
+  const { loading } = useSelector((state) => state.connectStudents);
   const dispatch = useDispatch();
-  const [studentDigits, setStudentDigits] = useState("");
-  const [isConnecting, setIsConnecting] = useState(false);
   const [touched, setTouched] = useState(false);
 
   const display = useMemo(() => `S${studentDigits}`, [studentDigits]);
@@ -28,16 +28,16 @@ const AddStudentForm = () => {
     if (!touched) setTouched(true);
   };
 
-  const handleClear = () => setStudentDigits("");
+  const handleClear = () => {
+    setStudentDigits("");
+    dispatch(clearFoundStudent());
+  };
 
   const handleConnect = () => {
-    if (!isValid || isConnecting) return;
-    setIsConnecting(true);
+    if (!isValid || loading) return;
     console.log("display", display);
-    setTimeout(() => {
-      setIsConnecting(false);
-      dispatch({ type: "FIND_STUDENT", payload: { custom_id: display } });
-    }, 1200);
+
+    dispatch({ type: "FIND_STUDENT", payload: { custom_id: display } });
   };
 
   const showError = touched && !isValid && studentDigits.length > 0;
@@ -50,7 +50,7 @@ const AddStudentForm = () => {
           className="w-12 h-12 rounded-2xl items-center justify-center"
           style={styles.badge}
         >
-          <Ionicons name="sparkles-outline" size={24} color="#6D28D9" />
+          <Ionicons name="person-add-outline" size={24} color="#3B82F6" />
         </View>
       </View>
 
@@ -120,15 +120,15 @@ const AddStudentForm = () => {
       {/* Action */}
       <Pressable
         onPress={handleConnect}
-        disabled={!isValid || isConnecting}
+        disabled={!isValid || loading}
         style={[
           styles.button,
           {
-            backgroundColor: !isValid || isConnecting ? "#A78BFA66" : "#8B5CF6",
+            backgroundColor: !isValid || loading ? "#A78BFA66" : "#8B5CF6",
           },
         ]}
       >
-        {isConnecting ? (
+        {loading ? (
           <ActivityIndicator size="small" color="#fff" />
         ) : (
           <>
@@ -156,10 +156,9 @@ const AddStudentForm = () => {
 
 const styles = StyleSheet.create({
   badge: {
-    backgroundColor: "#F5F3FF",
-    shadowColor: "#6D28D9",
+    backgroundColor: "#EFF6FF",
+    shadowColor: "#3B82F6",
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
     shadowRadius: 12,
     elevation: 3,
   },

@@ -24,6 +24,7 @@ import {
   sendConnectionRequestFailure,
 } from "../../../slices/Teacher/ConnectStudents/connectStudentSlice";
 import fetcher from "../../../services/fetcher";
+import { notify } from "../../../helpers/toast";
 
 // Worker Saga
 function* findStudentSaga(action) {
@@ -39,9 +40,12 @@ function* findStudentSaga(action) {
       })
     );
 
+    notify.success("Student found", response?.message);
+
     yield put(findStudentSuccess(response?.data?.details));
   } catch (error) {
     const message = error?.message || "Failed to connect student.";
+    notify.error("Student not found", message);
     yield put(clearFoundStudent());
     yield put(findStudentFailure(message));
   }
@@ -62,6 +66,8 @@ function* submitTuitionDetailsSaga(action) {
 
     yield put(submitTuitionDetailsSuccess());
 
+    notify.success("Tuition details", response?.message);
+
     const { teacher_id, student_id } = action.payload;
     yield call(fetchTuitionDetailsSaga, {
       payload: {
@@ -71,6 +77,7 @@ function* submitTuitionDetailsSaga(action) {
     });
   } catch (error) {
     const message = error?.message || "Failed to submit tuition details.";
+    notify.error("Tuition details", message);
     yield put(submitTuitionDetailsFailure(message));
   }
 }
@@ -113,12 +120,15 @@ function* sendConnectionRequestSaga(action) {
       })
     );
 
+    notify.success("Connection request", response?.message);
+
     yield put(sendConnectionRequestSuccess());
 
     // fetching connection status saga
     yield call(checkConnectionStatusSaga, { payload: { student_id } });
   } catch (error) {
     const message = error?.message || "Failed to send connection request.";
+    notify.error("Connection request", message);
     yield put(sendConnectionRequestFailure());
   }
 }
