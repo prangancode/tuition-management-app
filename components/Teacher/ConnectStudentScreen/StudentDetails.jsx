@@ -1,11 +1,5 @@
-import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  Pressable,
-  ActivityIndicator,
-  TouchableOpacity,
-} from "react-native";
+import React, { useEffect, useState, useMemo } from "react";
+import { View, Text, Pressable, TouchableOpacity } from "react-native";
 import { Ionicons, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
@@ -20,10 +14,11 @@ const StudentDetails = () => {
     connectionStatus,
     connectionStatusLoading,
   } = useSelector((state) => state.connectStudents);
+
   const router = useRouter();
   const {
     label,
-    disabled,
+    disabled: statusDisabled,
     className: buttonClass,
     icon: Icon,
   } = getConnectionButtonState(connectionStatus);
@@ -31,31 +26,64 @@ const StudentDetails = () => {
   const [isConnecting, setIsConnecting] = useState(false);
 
   const handleConnect = () => {
-    if (isConnecting) return;
+    if (isConnecting || statusDisabled || connectionStatusLoading) return;
     setIsConnecting(true);
+    // Demo: hook Saga/callback here
     setTimeout(() => {
       setIsConnecting(false);
-      // just a demo; hook your saga/callback here
       router.push("/tuitionDetailsForm");
     }, 1000);
   };
 
   // check connection status with a student regarding teacher
-
   useEffect(() => {
     if (studentInfo?.id) {
       dispatch({
         type: "CHECK_CONNECTION_STATUS",
-        payload: {
-          student_id: studentInfo.id,
-        },
+        payload: { student_id: studentInfo.id },
       });
     }
   }, [dispatch, studentInfo?.id]);
 
-  if (loading) {
-    return <StudentDetailsSkeleton />;
-  }
+  if (loading) return <StudentDetailsSkeleton />;
+
+  // --- Button state mirroring the web logic ---
+  const isDisabled = statusDisabled || isConnecting || connectionStatusLoading;
+
+  const text = isConnecting
+    ? "Sending request..."
+    : connectionStatusLoading
+      ? "Loading..."
+      : label;
+
+  // Fallback background based on status (works even if buttonClass is web-only)
+  const statusBgClass = useMemo(() => {
+    switch (connectionStatus) {
+      case "accepted":
+        return "bg-gray-600";
+      case "pending":
+        return "bg-yellow-500";
+      case "rejected":
+        return "bg-green-600";
+      default:
+        return "bg-green-600";
+    }
+  }, [connectionStatus]);
+
+  // Try to pick a bg-* from buttonClass (if provided), else fallback
+  const parsedBgFromUtil =
+    typeof buttonClass === "string"
+      ? (buttonClass.match(/\bbg-[\w-]+\b/g) || [])[0]
+      : "";
+
+  const bgClass = connectionStatusLoading
+    ? "bg-gray-400"
+    : parsedBgFromUtil || statusBgClass;
+
+  // Hide icon while connectionStatusLoading, fallback to Ionicons if util provides none
+  const showIcon = !connectionStatusLoading;
+  const RenderIcon =
+    Icon || ((p) => <Ionicons name="person-add-outline" {...p} />); // default
 
   return (
     <View className="max-w-md w-full self-center">
@@ -145,22 +173,23 @@ const StudentDetails = () => {
         <View className="border-t border-gray-100 p-4">
           <Pressable
             onPress={handleConnect}
-            disabled={isConnecting}
-            className={`h-11 rounded-xl flex-row items-center justify-center ${
-              isConnecting ? "bg-indigo-400" : "bg-indigo-600"
+            disabled={isDisabled}
+            className={`h-11 rounded-xl flex-row items-center justify-center px-4 ${bgClass} ${
+              isDisabled ? "opacity-70" : ""
             }`}
             style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
+            accessibilityRole="button"
+            accessibilityState={{
+              disabled: isDisabled,
+              busy: isConnecting || connectionStatusLoading,
+            }}
           >
-            {isConnecting ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <>
-                <Ionicons name="person-add-outline" size={18} color="#fff" />
-                <Text className="ml-2 text-white font-semibold text-sm">
-                  Send connection request
-                </Text>
-              </>
-            )}
+            {showIcon ? <RenderIcon size={18} color="#fff" /> : null}
+            <Text
+              className={`text-white font-semibold text-sm ${showIcon ? "ml-2" : ""}`}
+            >
+              {text}
+            </Text>
           </Pressable>
         </View>
       </View>
