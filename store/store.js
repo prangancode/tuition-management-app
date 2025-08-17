@@ -4,6 +4,7 @@ import { persistReducer, persistStore } from "redux-persist";
 
 import rootSaga from "../sagas/rootSaga";
 import authReducer from "../slices/Auth/authSlice";
+import connectStudentsReducer from "../slices/Teacher/ConnectStudents/connectStudentSlice";
 import { authPersistConfig } from "./persistConfig";
 
 const sagaMiddleware = createSagaMiddleware();
@@ -13,6 +14,7 @@ const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);
 export const store = configureStore({
   reducer: {
     auth: persistedAuthReducer, // only this is persisted
+    connectStudents: connectStudentsReducer,
   },
   middleware: (getDefault) =>
     getDefault({

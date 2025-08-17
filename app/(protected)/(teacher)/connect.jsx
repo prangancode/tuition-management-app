@@ -12,6 +12,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import AddStudentForm from "../../../components/Teacher/ConnectStudentScreen/AddStudentForm";
 import StudentDetails from "../../../components/Teacher/ConnectStudentScreen/StudentDetails";
 import TuitionDetails from "../../../components/Teacher/ConnectStudentScreen/TuitionDetails";
+import { useSelector } from "react-redux";
 
 const METHODS = [
   {
@@ -31,6 +32,7 @@ const METHODS = [
 ];
 
 const ConnectScreen = () => {
+  const { studentDetails } = useSelector((state) => state.connectStudents);
   const [activeKey, setActiveKey] = useState("id");
 
   return (
@@ -46,7 +48,7 @@ const ConnectScreen = () => {
           showsVerticalScrollIndicator={false}
           persistentScrollbar={true}
           scrollIndicatorInsets={{ right: 1 }}
-          stickyHeaderIndices={[0]}
+          // stickyHeaderIndices={[0]}
         >
           {/* Header (sticky) */}
           <View className="bg-blue-600 px-4 pt-6 pb-7 rounded-b-3xl">
@@ -119,8 +121,12 @@ const ConnectScreen = () => {
               </View>
 
               <AddStudentForm />
-              <StudentDetails />
-              <TuitionDetails />
+              {studentDetails && (
+                <>
+                  <StudentDetails />
+                  <TuitionDetails />
+                </>
+              )}
             </View>
 
             <View className="mt-3">

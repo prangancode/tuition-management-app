@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -8,17 +8,25 @@ import {
 } from "react-native";
 import { Ionicons, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useDispatch, useSelector } from "react-redux";
+import StudentDetailsSkeleton from "./StudentDetailsSkeleton";
+import { getConnectionButtonState } from "../../../utils/connectionStatusUtils";
 
 const StudentDetails = () => {
+  const dispatch = useDispatch();
+  const {
+    studentDetails: studentInfo,
+    loading,
+    connectionStatus,
+    connectionStatusLoading,
+  } = useSelector((state) => state.connectStudents);
   const router = useRouter();
-  // Demo data
-  const studentDetails = {
-    name: "Jamal Karim",
-    email: "jamal@example.com",
-    phone: "01500000000",
-    custom_id: "S01734627514",
-    role: "Student",
-  };
+  const {
+    label,
+    disabled,
+    className: buttonClass,
+    icon: Icon,
+  } = getConnectionButtonState(connectionStatus);
 
   const [isConnecting, setIsConnecting] = useState(false);
 
@@ -32,6 +40,23 @@ const StudentDetails = () => {
     }, 1000);
   };
 
+  // check connection status with a student regarding teacher
+
+  useEffect(() => {
+    if (studentInfo?.id) {
+      dispatch({
+        type: "CHECK_CONNECTION_STATUS",
+        payload: {
+          student_id: studentInfo.id,
+        },
+      });
+    }
+  }, [dispatch, studentInfo?.id]);
+
+  if (loading) {
+    return <StudentDetailsSkeleton />;
+  }
+
   return (
     <View className="max-w-md w-full self-center">
       <View className="rounded-2xl bg-white shadow-xl border border-gray-100 overflow-hidden">
@@ -41,12 +66,12 @@ const StudentDetails = () => {
             {/* Name + role */}
             <View className="flex-1 pr-4">
               <Text className="text-gray-900 font-semibold text-lg">
-                {studentDetails?.name || "—"}
+                {studentInfo?.name || "—"}
               </Text>
 
               <View className="mt-2 self-start rounded-full bg-blue-50 px-2.5 py-1 border border-blue-100">
                 <Text className="text-blue-700 text-xs font-semibold">
-                  {studentDetails?.role || "Student"}
+                  {studentInfo?.role || "Student"}
                 </Text>
               </View>
             </View>
@@ -54,7 +79,7 @@ const StudentDetails = () => {
             {/* Circular initials badge */}
             <View className="w-12 h-12 rounded-full items-center justify-center bg-indigo-100 border border-indigo-200">
               <Text className="text-indigo-700 font-semibold">
-                {studentDetails?.name
+                {studentInfo?.name
                   ?.split(" ")
                   .map((p) => p[0])
                   .join("")
@@ -75,7 +100,7 @@ const StudentDetails = () => {
                 <Feather name="mail" size={18} color="#f87171" />
               </View>
               <Text className="text-gray-900 text-sm font-medium flex-1">
-                {studentDetails?.email || "—"}
+                {studentInfo?.email || "—"}
               </Text>
               <TouchableOpacity hitSlop={8} onPress={() => {}}>
                 <Feather name="copy" size={16} color="#9CA3AF" />
@@ -88,7 +113,7 @@ const StudentDetails = () => {
                 <Feather name="phone" size={18} color="#10b981" />
               </View>
               <Text className="text-gray-500 text-sm flex-1">
-                {studentDetails?.phone || "—"}
+                {studentInfo?.phone || "—"}
               </Text>
               <TouchableOpacity hitSlop={8} onPress={() => {}}>
                 <Feather name="copy" size={16} color="#9CA3AF" />
@@ -105,7 +130,7 @@ const StudentDetails = () => {
                 />
               </View>
               <Text className="text-gray-500 text-sm flex-1">
-                {studentDetails?.custom_id || "—"}
+                {studentInfo?.custom_id || "—"}
               </Text>
               <View className="rounded-full bg-indigo-100 px-2 py-0.5 border border-indigo-200">
                 <Text className="text-indigo-700 text-[10px] font-semibold tracking-wide">

@@ -9,10 +9,12 @@ import {
   Pressable,
 } from "react-native";
 import { Ionicons, Feather } from "@expo/vector-icons";
+import { useDispatch } from "react-redux";
 
 const onlyDigits = (s = "") => s.replace(/\D/g, "").slice(0, 11); // max 11 digits
 
 const AddStudentForm = () => {
+  const dispatch = useDispatch();
   const [studentDigits, setStudentDigits] = useState("");
   const [isConnecting, setIsConnecting] = useState(false);
   const [touched, setTouched] = useState(false);
@@ -31,9 +33,10 @@ const AddStudentForm = () => {
   const handleConnect = () => {
     if (!isValid || isConnecting) return;
     setIsConnecting(true);
+    console.log("display", display);
     setTimeout(() => {
       setIsConnecting(false);
-      alert(`Request sent to ID: ${display}`);
+      dispatch({ type: "FIND_STUDENT", payload: { custom_id: display } });
     }, 1200);
   };
 
