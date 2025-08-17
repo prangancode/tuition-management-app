@@ -2,22 +2,28 @@ import React, { useMemo, useState } from "react";
 import {
   View,
   Text,
-  TextInput,
   ScrollView,
   Pressable,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Alert,
   SafeAreaView,
 } from "react-native";
 import { Ionicons, Feather } from "@expo/vector-icons";
 import Segment from "../../components/ui/Segment";
 import LabeledInput from "../../components/ui/LabeledInput";
+import { useDispatch, useSelector } from "react-redux";
+import { useRouter } from "expo-router";
+import useAuth from "../../hooks/useAuth";
 
 const DAYS = ["Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"];
 
 export default function TuitionDetailsForm() {
+  const { studentDetails } = useSelector((state) => state.connectStudents);
+  const { user } = useAuth();
+  const router = useRouter();
+  const dispatch = useDispatch();
+
   // base fields
   const [tuitionType, setTuitionType] = useState("monthly_based"); // "monthly_based" | "course"
   const [classLevel, setClassLevel] = useState("");
@@ -82,6 +88,8 @@ export default function TuitionDetailsForm() {
     setTimeout(() => {
       setSaving(false);
       const payload = {
+        teacher_id: user?.id,
+        student_id: studentDetails?.id,
         tuition_type: tuitionType,
         class_level: classLevel,
         subject_list: subjects
@@ -110,8 +118,15 @@ export default function TuitionDetailsForm() {
               duration,
             }),
       };
-      Alert.alert("Saved", "Tuition details saved locally.", [{ text: "OK" }]);
+
       console.log("LOCAL_SAVE_PREVIEW", payload);
+      dispatch({
+        type: "SUBMIT_TUITION_DETAILS",
+        payload: {
+          ...payload,
+          navigate: (path) => router.replace(path),
+        },
+      });
     }, 900);
   };
 

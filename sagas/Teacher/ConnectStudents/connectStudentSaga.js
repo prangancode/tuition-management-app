@@ -1,5 +1,5 @@
 // sagas/Teacher/ConnectStudent/connectStudentSaga.js
-import { call, put, takeLatest } from "redux-saga/effects";
+import { call, delay, put, takeLatest } from "redux-saga/effects";
 
 import { CONNECT_STUDENT_API } from "../../../utils/api";
 
@@ -53,14 +53,14 @@ function* findStudentSaga(action) {
 
 // worker saga to handle tuition details submission
 
-function* submitTuitionDetailsSaga(action) {
+function* submitTuitionDetailsSaga({ payload }) {
   try {
     yield put(submitTuitionDetailsStart());
 
     const response = yield call(() =>
       fetcher(CONNECT_STUDENT_API.CREATE_TUITION_DETAILS, {
         method: "POST",
-        body: action.payload,
+        body: payload,
       })
     );
 
@@ -68,13 +68,20 @@ function* submitTuitionDetailsSaga(action) {
 
     notify.success("Tuition details", response?.message);
 
-    const { teacher_id, student_id } = action.payload;
+    const { teacher_id, student_id } = payload;
     yield call(fetchTuitionDetailsSaga, {
       payload: {
         teacherId: teacher_id,
         studentId: student_id,
       },
     });
+
+    // toasting render for a beat
+    yield delay(400);
+
+    if (typeof payload?.navigate === "function") {
+      yield call(payload.navigate, "/connect");
+    }
   } catch (error) {
     const message = error?.message || "Failed to submit tuition details.";
     notify.error("Tuition details", message);

@@ -51,8 +51,6 @@ const StudentDetails = () => {
     }
   }, [dispatch, studentInfo?.id]);
 
-  if (loading) return <StudentDetailsSkeleton />;
-
   // --- Button state mirroring the web logic ---
   const isDisabled = statusDisabled || connectionStatusLoading;
 
@@ -86,6 +84,8 @@ const StudentDetails = () => {
   const showIcon = !connectionStatusLoading;
   const RenderIcon =
     Icon || ((p) => <Ionicons name="person-add-outline" {...p} />); // default
+
+  if (loading) return <StudentDetailsSkeleton />;
 
   return (
     <View className="max-w-md w-full self-center">
