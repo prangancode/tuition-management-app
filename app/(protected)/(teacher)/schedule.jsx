@@ -1,6 +1,14 @@
 // ScheduleScreen.jsx
 import { useEffect, useState, useMemo } from "react";
-import { View, SafeAreaView, FlatList, Text } from "react-native";
+import {
+  View,
+  SafeAreaView,
+  FlatList,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
 import StudentRow from "../../../components/Teacher/ScheduleScreen/StudentRow";
@@ -28,6 +36,73 @@ function EmptyState() {
   );
 }
 
+function EndOfList({ totalShown, total }) {
+  return (
+    <View className="items-center py-4">
+      <Text className="text-[12px] text-gray-400">
+        Showing {totalShown} of {total}
+      </Text>
+    </View>
+  );
+}
+
+function LoadMoreFooter({
+  isLoadingMore,
+  canLoadMore,
+  onPress,
+  currentPage,
+  totalPages,
+  totalShown,
+  total,
+}) {
+  if (isLoadingMore) {
+    return (
+      <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 20 }}>
+        <View
+          className="h-11 rounded-2xl bg-violet-600 items-center justify-center flex-row"
+          accessible
+          accessibilityRole="button"
+          accessibilityState={{ busy: true }}
+        >
+          <ActivityIndicator size="small" />
+          <Text className="text-white font-semibold ml-2">Loading…</Text>
+        </View>
+        <View className="items-center mt-2">
+          <Text className="text-[12px] text-gray-400">
+            Showing {totalShown} of {total}
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (!canLoadMore) {
+    return <EndOfList totalShown={totalShown} total={total} />;
+  }
+
+  return (
+    <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 20 }}>
+      <TouchableOpacity
+        onPress={onPress}
+        className="h-11 rounded-2xl bg-violet-600 items-center justify-center flex-row"
+        activeOpacity={0.9}
+        accessibilityRole="button"
+        accessibilityLabel="Load more students"
+      >
+        <Ionicons name="chevron-down" size={16} color="#fff" />
+        <Text className="text-white font-semibold ml-1">
+          Load more ({currentPage}/{totalPages})
+        </Text>
+      </TouchableOpacity>
+      <View className="items-center mt-2">
+        <Text className="text-[12px] text-gray-400">
+          Showing {totalShown} of {total}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
 /* ---------------- Screen ---------------- */
 export default function ScheduleScreen() {
   const dispatch = useDispatch();
@@ -49,19 +124,37 @@ export default function ScheduleScreen() {
     });
   }, [dispatch]);
 
-  // Optional: load more when reaching end
-  const canLoadMore = useMemo(() => {
-    if (!pagination) return false;
-    const { page, last_page } = pagination;
-    return page && last_page && page < last_page;
-  }, [pagination]);
+  const currentPage = pagination?.current_page ?? 1;
+  const totalPages = pagination?.total_pages ?? 1;
+  const totalItems = pagination?.total ?? activeConnections.length;
+  const perPage = pagination?.per_page ?? 5;
+  const hasMore =
+    typeof pagination?.has_more_pages === "boolean"
+      ? pagination.has_more_pages
+      : currentPage < totalPages;
 
-  const handleEndReached = () => {
-    if (loading || !canLoadMore) return;
-    const nextPage = (pagination?.page || 1) + 1;
+  const canLoadMore = useMemo(
+    () => activeConnections.length > 0 && hasMore,
+    [activeConnections.length, hasMore]
+  );
+
+  const isLoadingInitial = loading && activeConnections.length === 0;
+  const isLoadingMore = loading && activeConnections.length > 0;
+
+  const handleLoadMore = () => {
+    if (isLoadingMore || !canLoadMore) return;
+    const nextPage = Math.min(currentPage + 1, totalPages);
     dispatch({
       type: "FETCH_ACTIVE_CONNECTION_STUDENTS",
-      payload: { filters: { per_page: 5, page: nextPage } },
+      payload: { filters: { per_page: perPage, page: nextPage } },
+    });
+  };
+
+  const onRefresh = () => {
+    if (isLoadingInitial) return;
+    dispatch({
+      type: "FETCH_ACTIVE_CONNECTION_STUDENTS",
+      payload: { filters: { per_page: perPage, page: 1 } },
     });
   };
 
@@ -69,7 +162,6 @@ export default function ScheduleScreen() {
     <SafeAreaView className="flex-1 bg-white">
       <FlatList
         data={activeConnections}
-        // ensure string key
         keyExtractor={(it) => String(it.id)}
         renderItem={({ item }) => (
           <View style={{ paddingHorizontal: 16 }}>
@@ -94,22 +186,28 @@ export default function ScheduleScreen() {
         ListHeaderComponentStyle={{ marginBottom: 12 }}
         ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
         ListFooterComponent={
-          activeConnections.length > 0 && loading ? (
-            <SkeletonList count={2} />
-          ) : (
-            <View style={{ height: 12 }} />
-          )
+          <LoadMoreFooter
+            isLoadingMore={isLoadingMore}
+            canLoadMore={canLoadMore}
+            onPress={handleLoadMore}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalShown={activeConnections.length}
+            total={totalItems}
+          />
         }
         ListEmptyComponent={
-          loading ? <SkeletonList count={5} /> : <EmptyState />
+          isLoadingInitial ? <SkeletonList count={5} /> : <EmptyState />
         }
         contentContainerStyle={{ paddingBottom: 24 }}
         showsVerticalScrollIndicator={false}
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
         contentInsetAdjustmentBehavior="automatic"
-        onEndReachedThreshold={0.4}
-        onEndReached={handleEndReached}
+        // Button-only load more (no infinite scroll):
+
+        refreshing={isLoadingInitial}
+        onRefresh={onRefresh}
       />
     </SafeAreaView>
   );
