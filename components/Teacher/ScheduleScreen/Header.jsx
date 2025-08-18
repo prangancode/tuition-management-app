@@ -1,8 +1,20 @@
-import { View, Text, TouchableOpacity, TextInput } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  ActivityIndicator,
+} from "react-native";
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 
-const Header = ({ query, setQuery, STUDENTS }) => {
+const Header = ({
+  query,
+  onChangeQuery,
+  onClearQuery,
+  isSearching,
+  STUDENTS,
+}) => {
   return (
     <>
       {/* Hero header */}
@@ -29,15 +41,33 @@ const Header = ({ query, setQuery, STUDENTS }) => {
         </Text>
 
         {/* Search */}
-        <View className="mt-4 bg-white/15 rounded-xl px-3 py-2 flex-row items-center border border-white/20">
+        <View
+          className="mt-4 rounded-xl px-3 py-2 flex-row items-center border"
+          style={{
+            backgroundColor: "rgba(255,255,255,0.15)",
+            borderColor: "rgba(255,255,255,0.2)",
+          }}
+        >
           <Ionicons name="search" size={16} color="white" />
           <TextInput
             value={query}
-            onChangeText={setQuery}
+            onChangeText={onChangeQuery}
             placeholder="Search students, subjects, phone…"
             placeholderTextColor="rgba(255,255,255,0.85)"
             className="ml-2 text-white flex-1"
+            returnKeyType="search"
           />
+          {/* Right adornment: spinner or clear */}
+          {isSearching ? (
+            <ActivityIndicator size="small" />
+          ) : !!query ? (
+            <TouchableOpacity
+              onPress={onClearQuery}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name="close-circle" size={18} color="white" />
+            </TouchableOpacity>
+          ) : null}
         </View>
 
         {/* Small stats strip */}
