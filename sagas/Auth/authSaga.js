@@ -1,4 +1,4 @@
-import { call, put, takeLatest } from "redux-saga/effects";
+import { call, put, takeLatest, takeLeading } from "redux-saga/effects";
 import * as SecureStore from "expo-secure-store";
 import {
   loginStart,
@@ -16,6 +16,7 @@ import fetcher from "../../services/fetcher";
 // Optional purge ( wipe persisted storage on logout)
 import { purgeStoredState } from "redux-persist";
 import { authPersistConfig } from "../../store/persistConfig";
+import { notify } from "../../helpers/toast";
 
 // helpers
 function* setToken(token) {
@@ -51,6 +52,8 @@ function* loginSaga({ payload }) {
     yield call(setToken, data.token);
     yield put(loginSuccess(data));
 
+    notify.success("Login success", response?.message);
+
     // role-based redirect
     if (navigate) {
       const dest = data?.user?.role === "teacher" ? "/" : "/home";
@@ -58,6 +61,7 @@ function* loginSaga({ payload }) {
     }
   } catch (error) {
     const message = error.message || "Login failed.";
+    notify.error("Login failed", message);
     yield put(loginFailure(message));
   }
 }
@@ -80,25 +84,33 @@ function* registerSaga({ payload }) {
     }
 
     yield put(registerSuccess(data));
+    notify.success("Registration success", response?.message);
     // usually navigate handled in component after success
   } catch (error) {
     const message = error.message || "Registration failed.";
+    notify.error("Registration failed", message);
     yield put(registerFailure(message));
   }
 }
 
-function* logoutSaga({ payload }) {
-  const { navigate } = payload || {};
+export function* logoutSaga({ payload }) {
+  const { navigate, reason } = payload || {};
+
+  // (optional) toast for UX clarity
+  if (reason) {
+    notify.error("Session expired", reason || "Please sign in again.");
+    yield delay(250); // let the toast render before nav
+  }
+
   // Clear device token + reset Redux state
   yield call(clearToken);
   yield put(signedOut());
 
-  // OPTIONAL: wipe persisted state (keep if you want a hard reset)
+  // OPTIONAL: wipe persisted state (hard reset)
   yield call(purgeStoredState, authPersistConfig);
 
   // Navigate back to Welcome
-  if (navigate) {
-    // pick the one that matches your folder:
+  if (typeof navigate === "function") {
     const dest = "/(auth)/welcome"; // or "/welcome"
     yield call(navigate, dest);
   }
@@ -108,5 +120,5 @@ function* logoutSaga({ payload }) {
 export default function* authSaga() {
   yield takeLatest("LOGIN", loginSaga);
   yield takeLatest("REGISTER", registerSaga);
-  yield takeLatest("LOGOUT", logoutSaga);
+  yield takeLeading("LOGOUT", logoutSaga);
 }

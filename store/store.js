@@ -7,6 +7,9 @@ import authReducer from "../slices/Auth/authSlice";
 import connectStudentsReducer from "../slices/Teacher/ConnectStudents/connectStudentSlice";
 import { authPersistConfig } from "./persistConfig";
 
+import { router } from "expo-router";
+import { setOnUnauthorized } from "../services/fetcher";
+
 const sagaMiddleware = createSagaMiddleware();
 
 const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);
@@ -36,5 +39,26 @@ export const store = configureStore({
 export const persistor = persistStore(store);
 
 sagaMiddleware.run(rootSaga);
+
+/** ========= Global unauthorized behavior ========= */
+let loggingOut = false;
+setOnUnauthorized((err) => {
+  if (loggingOut) return;
+  loggingOut = true;
+
+  store.dispatch({
+    type: "LOGOUT",
+    payload: {
+      reason: err?.message, // optional: show in toast
+      navigate: (path) => router.replace(path), // pass router into saga
+    },
+  });
+
+  // prevent duplicate dispatches if multiple requests fail together
+  setTimeout(() => {
+    loggingOut = false;
+  }, 1000);
+});
+/** =============================================== */
 
 export default store;

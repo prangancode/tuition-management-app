@@ -19,7 +19,9 @@ import useAuth from "../../hooks/useAuth";
 const DAYS = ["Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"];
 
 export default function TuitionDetailsForm() {
-  const { studentDetails } = useSelector((state) => state.connectStudents);
+  const { studentDetails, tuitionDetailsSubmitting } = useSelector(
+    (state) => state.connectStudents
+  );
   const { user } = useAuth();
   const router = useRouter();
   const dispatch = useDispatch();
@@ -48,8 +50,6 @@ export default function TuitionDetailsForm() {
   const [salaryPerSubject, setSalaryPerSubject] = useState("");
   const [totalCourseSalary, setTotalCourseSalary] = useState("");
   const [duration, setDuration] = useState("");
-
-  const [saving, setSaving] = useState(false);
 
   const requiredBase = [
     classLevel,
@@ -83,51 +83,47 @@ export default function TuitionDetailsForm() {
   };
 
   const handleSave = () => {
-    if (!isValid || saving) return;
-    setSaving(true);
-    setTimeout(() => {
-      setSaving(false);
-      const payload = {
-        teacher_id: user?.id,
-        student_id: studentDetails?.id,
-        tuition_type: tuitionType,
-        class_level: classLevel,
-        subject_list: subjects
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean),
-        medium,
-        institute_name: institute,
-        address_line: address,
-        district,
-        thana,
-        study_purpose: studyPurpose,
-        ...(tuitionType === "monthly_based"
-          ? {
-              tuition_days_per_week: Number(daysPerWeek),
-              hours_per_day: Number(hoursPerDay),
-              days_name: daysSelected,
-              salary_per_month: Number(salaryPerMonth),
-              starting_month: startingMonth,
-            }
-          : {
-              total_classes_per_course: Number(totalClasses),
-              hours_per_class: Number(hoursPerClass),
-              salary_per_subject: Number(salaryPerSubject),
-              total_course_completion_salary: Number(totalCourseSalary),
-              duration,
-            }),
-      };
+    if (!isValid || tuitionDetailsSubmitting) return;
+    const payload = {
+      teacher_id: user?.id,
+      student_id: studentDetails?.id,
+      tuition_type: tuitionType,
+      class_level: classLevel,
+      subject_list: subjects
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+      medium,
+      institute_name: institute,
+      address_line: address,
+      district,
+      thana,
+      study_purpose: studyPurpose,
+      ...(tuitionType === "monthly_based"
+        ? {
+            tuition_days_per_week: Number(daysPerWeek),
+            hours_per_day: Number(hoursPerDay),
+            days_name: daysSelected,
+            salary_per_month: Number(salaryPerMonth),
+            starting_month: startingMonth,
+          }
+        : {
+            total_classes_per_course: Number(totalClasses),
+            hours_per_class: Number(hoursPerClass),
+            salary_per_subject: Number(salaryPerSubject),
+            total_course_completion_salary: Number(totalCourseSalary),
+            duration,
+          }),
+    };
 
-      console.log("LOCAL_SAVE_PREVIEW", payload);
-      dispatch({
-        type: "SUBMIT_TUITION_DETAILS",
-        payload: {
-          ...payload,
-          navigate: (path) => router.replace(path),
-        },
-      });
-    }, 900);
+    console.log("LOCAL_SAVE_PREVIEW", payload);
+    dispatch({
+      type: "SUBMIT_TUITION_DETAILS",
+      payload: {
+        ...payload,
+        navigate: (path) => router.replace(path),
+      },
+    });
   };
 
   return (
@@ -400,13 +396,15 @@ export default function TuitionDetailsForm() {
             <View className="px-5 py-5 mt-2 border-t border-gray-100">
               <Pressable
                 onPress={handleSave}
-                disabled={!isValid || saving}
+                disabled={!isValid || tuitionDetailsSubmitting}
                 className={`h-12 rounded-xl items-center justify-center flex-row gap-2 ${
-                  !isValid || saving ? "bg-indigo-400" : "bg-indigo-600"
+                  !isValid || tuitionDetailsSubmitting
+                    ? "bg-indigo-400"
+                    : "bg-indigo-600"
                 }`}
                 style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
               >
-                {saving ? (
+                {tuitionDetailsSubmitting ? (
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
                   <>

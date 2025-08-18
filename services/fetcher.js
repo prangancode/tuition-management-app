@@ -18,6 +18,13 @@ async function getAuthToken() {
   }
 }
 
+/** ========= NEW: pluggable callbacks ========= */
+let onUnauthorized; // (err) => void | Promise<void>
+export function setOnUnauthorized(fn) {
+  onUnauthorized = fn;
+}
+/** =========================================== */
+
 const fetcher = async (url, options = {}) => {
   const method = (options.method || "GET").toUpperCase();
   const isFormData = options.body instanceof FormData;
@@ -74,6 +81,19 @@ const fetcher = async (url, options = {}) => {
       const err = new Error(message);
       err.status = res.status;
       err.data = data;
+
+      // ========= NEW: trigger global unauthorized handler =========
+      if (
+        [401, 403, 419, 440].includes(res.status) &&
+        typeof onUnauthorized === "function"
+      ) {
+        // fire-and-forget; don't await to keep fetcher's surface the same
+        try {
+          onUnauthorized(err);
+        } catch {}
+      }
+      // ============================================================
+
       throw err;
     }
 
