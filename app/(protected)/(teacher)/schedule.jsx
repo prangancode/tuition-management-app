@@ -157,6 +157,14 @@ export default function ScheduleScreen() {
             onClearQuery={handleClearQuery}
             isSearching={isSearching}
             STUDENTS={activeConnections}
+            onRefreshPress={() => {
+              // main API call (page 1)
+              dispatch({
+                type: "FETCH_ACTIVE_CONNECTION_STUDENTS",
+                payload: { filters: { per_page: perPage, page: 1 } },
+              });
+            }}
+            refreshing={loading}
           />
         }
         ListHeaderComponentStyle={{ marginBottom: 12 }}

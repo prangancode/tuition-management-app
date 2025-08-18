@@ -14,6 +14,8 @@ const Header = ({
   onClearQuery,
   isSearching,
   STUDENTS,
+  onRefreshPress, // ⬅️ new
+  refreshing, // ⬅️ new
 }) => {
   return (
     <>
@@ -57,7 +59,6 @@ const Header = ({
             className="ml-2 text-white flex-1"
             returnKeyType="search"
           />
-          {/* Right adornment: spinner or clear */}
           {isSearching ? (
             <ActivityIndicator size="small" />
           ) : !!query ? (
@@ -90,17 +91,35 @@ const Header = ({
         </View>
       </View>
 
-      {/* Section title */}
-      <View className="px-4 mt-4 flex-row items-center gap-2">
-        <View
-          className="w-8 h-8 rounded-xl items-center justify-center"
-          style={{ backgroundColor: "#EEF2FF" }}
-        >
-          <Ionicons name="people-outline" size={18} color="#4F46E5" />
+      {/* Section title + refresh */}
+      <View className="px-4 mt-4 flex-row items-center justify-between">
+        <View className="flex-row items-center gap-2">
+          <View
+            className="w-8 h-8 rounded-xl items-center justify-center"
+            style={{ backgroundColor: "#EEF2FF" }}
+          >
+            <Ionicons name="people-outline" size={18} color="#4F46E5" />
+          </View>
+          <Text className="text-sm font-semibold text-gray-900">
+            Active Students
+          </Text>
         </View>
-        <Text className="text-sm font-semibold text-gray-900">
-          Active Students
-        </Text>
+
+        <TouchableOpacity
+          onPress={onRefreshPress}
+          disabled={!!refreshing}
+          className="w-9 h-9 rounded-xl items-center justify-center"
+          style={{ backgroundColor: "#EEF2FF", opacity: refreshing ? 0.6 : 1 }}
+          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+          accessibilityRole="button"
+          accessibilityLabel="Refresh"
+        >
+          {refreshing ? (
+            <ActivityIndicator size="small" />
+          ) : (
+            <Ionicons name="refresh-outline" size={18} color="#4F46E5" />
+          )}
+        </TouchableOpacity>
       </View>
     </>
   );
