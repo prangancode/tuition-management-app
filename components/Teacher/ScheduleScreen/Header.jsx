@@ -45,7 +45,7 @@ const Header = ({ query, setQuery, STUDENTS }) => {
           <View className="flex-1 bg-white/15 rounded-xl p-3">
             <Text className="text-white/90 text-xs">Active Students</Text>
             <Text className="text-white font-bold text-lg">
-              {STUDENTS.length}
+              {STUDENTS?.length}
             </Text>
           </View>
           <View className="flex-1 bg-white/15 rounded-xl p-3">
