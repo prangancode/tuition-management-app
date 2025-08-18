@@ -1,19 +1,12 @@
-// ScheduleScreen.jsx
 import { useEffect, useState, useMemo } from "react";
-import {
-  View,
-  SafeAreaView,
-  FlatList,
-  Text,
-  TouchableOpacity,
-  ActivityIndicator,
-} from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { View, SafeAreaView, FlatList, Text } from "react-native";
+
 import { useRouter } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
 import StudentRow from "../../../components/Teacher/ScheduleScreen/StudentRow";
 import StudentRowSkeleton from "../../../components/Teacher/ScheduleScreen/StudentRowSkeleton";
 import Header from "../../../components/Teacher/ScheduleScreen/Header";
+import PaginationFooter from "../../../components/ui/PaginationFooter";
 
 /* ---------------- Helpers ---------------- */
 function SkeletonList({ count = 5 }) {
@@ -32,73 +25,6 @@ function EmptyState() {
   return (
     <View style={{ paddingHorizontal: 16, paddingTop: 24 }}>
       <Text className="text-gray-500">No active students found.</Text>
-    </View>
-  );
-}
-
-function EndOfList({ totalShown, total }) {
-  return (
-    <View className="items-center py-4">
-      <Text className="text-[12px] text-gray-400">
-        Showing {totalShown} of {total}
-      </Text>
-    </View>
-  );
-}
-
-function LoadMoreFooter({
-  isLoadingMore,
-  canLoadMore,
-  onPress,
-  currentPage,
-  totalPages,
-  totalShown,
-  total,
-}) {
-  if (isLoadingMore) {
-    return (
-      <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 20 }}>
-        <View
-          className="h-11 rounded-2xl bg-violet-600 items-center justify-center flex-row"
-          accessible
-          accessibilityRole="button"
-          accessibilityState={{ busy: true }}
-        >
-          <ActivityIndicator size="small" />
-          <Text className="text-white font-semibold ml-2">Loading…</Text>
-        </View>
-        <View className="items-center mt-2">
-          <Text className="text-[12px] text-gray-400">
-            Showing {totalShown} of {total}
-          </Text>
-        </View>
-      </View>
-    );
-  }
-
-  if (!canLoadMore) {
-    return <EndOfList totalShown={totalShown} total={total} />;
-  }
-
-  return (
-    <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 20 }}>
-      <TouchableOpacity
-        onPress={onPress}
-        className="h-11 rounded-2xl bg-violet-600 items-center justify-center flex-row"
-        activeOpacity={0.9}
-        accessibilityRole="button"
-        accessibilityLabel="Load more students"
-      >
-        <Ionicons name="chevron-down" size={16} color="#fff" />
-        <Text className="text-white font-semibold ml-1">
-          Load more ({currentPage}/{totalPages})
-        </Text>
-      </TouchableOpacity>
-      <View className="items-center mt-2">
-        <Text className="text-[12px] text-gray-400">
-          Showing {totalShown} of {total}
-        </Text>
-      </View>
     </View>
   );
 }
@@ -186,10 +112,10 @@ export default function ScheduleScreen() {
         ListHeaderComponentStyle={{ marginBottom: 12 }}
         ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
         ListFooterComponent={
-          <LoadMoreFooter
-            isLoadingMore={isLoadingMore}
+          <PaginationFooter
+            loading={isLoadingMore}
             canLoadMore={canLoadMore}
-            onPress={handleLoadMore}
+            onLoadMore={handleLoadMore}
             currentPage={currentPage}
             totalPages={totalPages}
             totalShown={activeConnections.length}
