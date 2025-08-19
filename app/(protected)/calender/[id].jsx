@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, Stack } from "expo-router";
+import { useLocalSearchParams, Stack, router } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
 
 /* ---------- Helpers ---------- */
@@ -255,11 +255,7 @@ export default function StudentCalendarScreen() {
             </View>
 
             <TouchableOpacity
-              // onPress={() =>
-              //   dispatch({
-              //     type: "SUBMIT_TUITION_EVENTS_OPEN_FORM",
-              //   })
-              // }
+              onPress={() => router.push("/calender/tuitionEventForm")}
               className="px-3 py-2 rounded-xl flex-row items-center"
               style={{ backgroundColor: "#EEF2FF" }}
             >
