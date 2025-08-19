@@ -55,7 +55,7 @@ export default function TuitionEventForm({ setIsModalOpen }) {
   const dispatch = useDispatch();
   const { submitting } = useSelector((s) => s.scheduleTuitionEvents);
 
-  const { studentName, customId } = useLocalSearchParams();
+  const { studentName, customId, studentId } = useLocalSearchParams();
 
   // Local form state
   const [title, setTitle] = useState("");
@@ -90,7 +90,7 @@ export default function TuitionEventForm({ setIsModalOpen }) {
     dispatch({
       type: "SUBMIT_TUITION_EVENTS",
       payload: {
-        student_id: student?.id || "",
+        student_id: studentId || "",
         title: title.trim(),
         description: description.trim(),
         scheduled_at: scheduledAt,

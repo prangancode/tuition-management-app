@@ -234,9 +234,10 @@ export default function StudentCalendarScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <Stack.Screen options={{ headerShown: false }} />
-
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 28 }}>
+      <ScrollView
+        contentContainerStyle={{ padding: 16, paddingBottom: 28 }}
+        showsVerticalScrollIndicator={false}
+      >
         {/* ===== Header ===== */}
         <View className="mb-3">
           <View className="flex-row items-center justify-between">
@@ -258,7 +259,11 @@ export default function StudentCalendarScreen() {
               onPress={() =>
                 router.push({
                   pathname: "/calender/tuitionEventForm",
-                  params: { studentName: studentName, customId: customId },
+                  params: {
+                    studentName: studentName,
+                    customId: customId,
+                    studentId: studentId,
+                  },
                 })
               }
               className="px-3 py-2 rounded-xl flex-row items-center"
