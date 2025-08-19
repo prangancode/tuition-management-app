@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -6,47 +6,11 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
-  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, Stack } from "expo-router";
-
-/* ---------- Dummy data (swap with API/store) ---------- */
-const STUDENTS = [
-  { id: "1", name: "Sarah Johnson", custom_id: "S0182727334" },
-  { id: "2", name: "Michael Chen", custom_id: "S0171111222" },
-  { id: "3", name: "Alex Thompson", custom_id: "S0199999000" },
-];
-
-// date: [{ id, name, time, avatar }]
-const EVENTS = {
-  "2025-01-21": [
-    {
-      id: "1",
-      name: "Leslie Alexander",
-      time: "1:00 PM - 2:30 PM",
-      avatar: "https://i.pravatar.cc/100?img=1",
-    },
-    {
-      id: "2",
-      name: "Michael Foster",
-      time: "3:00 PM - 4:30 PM",
-      avatar: "https://i.pravatar.cc/100?img=5",
-    },
-    {
-      id: "3",
-      name: "Dries Vincent",
-      time: "5:00 PM - 6:30 PM",
-      avatar: "https://i.pravatar.cc/100?img=12",
-    },
-    {
-      id: "4",
-      name: "Lindsay Walton",
-      time: "7:00 PM - 8:30 PM",
-      avatar: "https://i.pravatar.cc/100?img=8",
-    },
-  ],
-};
+import { useDispatch, useSelector } from "react-redux";
 
 /* ---------- Helpers ---------- */
 const MONTHS = [
@@ -74,8 +38,18 @@ const isToday = (d) => {
   );
 };
 const ymd = (d) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+    d.getDate()
+  ).padStart(2, "0")}`;
 
+// Parse "YYYY-MM-DD HH:mm:ss" as local time
+const parseSQLDateTimeLocal = (s = "") => new Date(s.replace(" ", "T"));
+
+// 12-hour time like "1:05 PM"
+const fmtTime = (d) =>
+  d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+// Make 6x7 grid (Mon-first)
 function makeGrid(year, month) {
   const out = [];
   const first = new Date(year, month, 1);
@@ -94,41 +68,118 @@ function makeGrid(year, month) {
   return out;
 }
 
+// Visuals for status
+const statusVisual = (status = "") => {
+  const s = String(status || "").toLowerCase();
+  if (s === "accepted" || s === "confirmed") {
+    return {
+      bg: "#DCFCE7",
+      fg: "#166534",
+      icon: "checkmark-circle-outline",
+      label: "Accepted",
+    };
+  }
+  if (s === "pending") {
+    return {
+      bg: "#FEF9C3",
+      fg: "#92400E",
+      icon: "time-outline",
+      label: "Pending",
+    };
+  }
+  if (s === "rejected" || s === "cancelled" || s === "canceled") {
+    return {
+      bg: "#FEE2E2",
+      fg: "#991B1B",
+      icon: "close-circle-outline",
+      label: "Cancelled",
+    };
+  }
+  return {
+    bg: "#E5E7EB",
+    fg: "#374151",
+    icon: "ellipse-outline",
+    label: s || "Unknown",
+  };
+};
+
 /* ---------- Small bits ---------- */
-const EventRow = ({ name, time, avatar, onPress }) => (
-  <TouchableOpacity
-    activeOpacity={0.9}
-    onPress={onPress}
-    className="flex-row items-center p-3 mb-3 rounded-2xl bg-white border border-gray-100 shadow-sm"
-  >
-    {avatar ? (
-      <Image source={{ uri: avatar }} className="w-10 h-10 rounded-full mr-3" />
-    ) : (
+function EventRow({ event }) {
+  const studentName = event?.student?.name || "";
+  const title = event?.title || "Untitled";
+  const desc = event?.description || "";
+  const when = parseSQLDateTimeLocal(event?.scheduled_at);
+  const timeText = fmtTime(when);
+  const v = statusVisual(event?.status);
+
+  return (
+    <View className="flex-row items-center p-3 mb-3 rounded-2xl bg-white border border-gray-100 shadow-sm">
       <View
         className="w-10 h-10 rounded-full mr-3 items-center justify-center"
-        style={{ backgroundColor: "#E5E7EB" }}
+        style={{ backgroundColor: "#EEF2FF" }}
       >
-        <Ionicons name="person" size={16} color="#374151" />
+        <Ionicons name="book-outline" size={16} color="#4F46E5" />
       </View>
-    )}
-    <View className="flex-1">
-      <Text className="text-[14px] font-semibold text-gray-900">{name}</Text>
-      <View className="mt-1 self-start px-2 py-0.5 rounded-md bg-gray-100 flex-row items-center">
-        <Ionicons name="time-outline" size={12} color="#374151" />
-        <Text className="ml-1 text-[11px] text-gray-700">{time}</Text>
+
+      <View className="flex-1">
+        <Text
+          className="text-[14px] font-semibold text-gray-900"
+          numberOfLines={1}
+        >
+          {title}
+        </Text>
+
+        <View className="mt-1 flex-row items-center gap-2">
+          <View className="self-start px-2 py-0.5 rounded-md bg-gray-100 flex-row items-center">
+            <Ionicons name="time-outline" size={12} color="#374151" />
+            <Text className="ml-1 text-[11px] text-gray-700">{timeText}</Text>
+          </View>
+
+          {!!studentName && (
+            <View className="self-start px-2 py-0.5 rounded-md bg-gray-100 flex-row items-center">
+              <Ionicons name="person-outline" size={12} color="#374151" />
+              <Text
+                className="ml-1 text-[11px] text-gray-700"
+                numberOfLines={1}
+              >
+                {studentName}
+              </Text>
+            </View>
+          )}
+
+          <View
+            className="self-start px-2 py-0.5 rounded-md flex-row items-center"
+            style={{ backgroundColor: v.bg }}
+          >
+            <Ionicons name={v.icon} size={12} color={v.fg} />
+            <Text
+              className="ml-1 text-[11px] font-semibold"
+              style={{ color: v.fg }}
+            >
+              {v.label}
+            </Text>
+          </View>
+        </View>
+
+        {!!desc && (
+          <Text className="mt-1 text-[12px] text-gray-500" numberOfLines={2}>
+            {desc}
+          </Text>
+        )}
       </View>
+
+      <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
     </View>
-    <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
-  </TouchableOpacity>
-);
+  );
+}
 
 /* ---------- Screen ---------- */
 export default function StudentCalendarScreen() {
-  const { id } = useLocalSearchParams();
-  const student = STUDENTS.find((s) => s.id === id) || {
-    name: "Student",
-    custom_id: "S0000000000",
-  };
+  const { specificStudentEvents, specificStudentEventsLoading } = useSelector(
+    (state) => state.scheduleTuitionEvents
+  );
+  const dispatch = useDispatch();
+  const { studentId, studentName, customId } = useLocalSearchParams();
 
   // current month/year/day
   const today = new Date();
@@ -136,9 +187,39 @@ export default function StudentCalendarScreen() {
   const [year, setYear] = useState(today.getFullYear());
   const [selectedDate, setSelectedDate] = useState(ymd(today));
 
+  // Fetch events for the student
+  useEffect(() => {
+    if (!studentId) return;
+    dispatch({
+      type: "FETCH_SPECIFIC_STUDENT_EVENTS",
+      payload: { student_id: studentId },
+    });
+  }, [studentId, dispatch]);
+
+  // Group events by YYYY-MM-DD
+  const eventsByDay = useMemo(() => {
+    const map = {};
+    (specificStudentEvents || []).forEach((e) => {
+      if (!e?.scheduled_at) return;
+      const d = parseSQLDateTimeLocal(e.scheduled_at);
+      const key = ymd(d);
+      if (!map[key]) map[key] = [];
+      map[key].push(e);
+    });
+    // Sort each day by time asc
+    Object.values(map).forEach((arr) =>
+      arr.sort(
+        (a, b) =>
+          parseSQLDateTimeLocal(a.scheduled_at) -
+          parseSQLDateTimeLocal(b.scheduled_at)
+      )
+    );
+    return map;
+  }, [specificStudentEvents]);
+
   const grid = useMemo(() => makeGrid(year, month), [year, month]);
   const title = `${MONTHS[month]} ${year}`;
-  const eventsForSelectedDay = EVENTS[selectedDate] || [];
+  const eventsForSelectedDay = eventsByDay[selectedDate] || [];
 
   const goPrev = () =>
     setMonth((m) => (m === 0 ? (setYear((y) => y - 1), 11) : m - 1));
@@ -156,7 +237,7 @@ export default function StudentCalendarScreen() {
       <Stack.Screen options={{ headerShown: false }} />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 28 }}>
-        {/* ===== Minimal playful header ===== */}
+        {/* ===== Header ===== */}
         <View className="mb-3">
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center">
@@ -165,15 +246,20 @@ export default function StudentCalendarScreen() {
                 size={18}
                 color="#4F46E5"
               />
-              <Text className="ml-2 text-[16px] font-extrabold text-gray-900">
-                {student.name} · Calendar
+              <Text
+                className="ml-2 text-[16px] font-extrabold text-gray-900"
+                numberOfLines={1}
+              >
+                {studentName ? `${studentName} · Calendar` : "Calendar"}
               </Text>
             </View>
 
             <TouchableOpacity
-              onPress={() =>
-                Alert.alert("Add Event", "Open your event form here")
-              }
+              // onPress={() =>
+              //   dispatch({
+              //     type: "SUBMIT_TUITION_EVENTS_OPEN_FORM",
+              //   })
+              // }
               className="px-3 py-2 rounded-xl flex-row items-center"
               style={{ backgroundColor: "#EEF2FF" }}
             >
@@ -187,19 +273,21 @@ export default function StudentCalendarScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* playful ID pill */}
-          <View
-            className="mt-2 self-start px-2.5 py-1 rounded-full flex-row items-center"
-            style={{ backgroundColor: "#F1F5F9" }}
-          >
-            <Ionicons name="card-outline" size={12} color="#334155" />
-            <Text
-              className="ml-1 text-[11px] font-semibold"
-              style={{ color: "#334155" }}
+          {/* ID pill */}
+          {!!customId && (
+            <View
+              className="mt-2 self-start px-2.5 py-1 rounded-full flex-row items-center"
+              style={{ backgroundColor: "#F1F5F9" }}
             >
-              {student.custom_id}
-            </Text>
-          </View>
+              <Ionicons name="card-outline" size={12} color="#334155" />
+              <Text
+                className="ml-1 text-[11px] font-semibold"
+                style={{ color: "#334155" }}
+              >
+                {customId}
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Month controls */}
@@ -235,12 +323,12 @@ export default function StudentCalendarScreen() {
             {Array.from({ length: 6 }).map((_, row) => (
               <View
                 key={row}
-                className="flex-row justify-between border-t border-gray-100"
+                className="flex-row justify-between border-top border-gray-100"
               >
                 {grid.slice(row * 7, row * 7 + 7).map((cell) => {
                   const key = ymd(cell.date);
                   const selected = selectedDate === key;
-                  const hasEvents = !!EVENTS[key]?.length;
+                  const hasEvents = !!eventsByDay[key]?.length;
 
                   const ballClasses = [
                     "w-10 h-10 rounded-full items-center justify-center",
@@ -273,7 +361,7 @@ export default function StudentCalendarScreen() {
                           className="w-1.5 h-1.5 rounded-full mt-1"
                           style={{
                             backgroundColor: selected ? "#111827" : "#4F46E5",
-                            opacity: selected ? 1 : 0.75,
+                            opacity: selected ? 1 : 0.85,
                           }}
                         />
                       ) : (
@@ -308,20 +396,18 @@ export default function StudentCalendarScreen() {
             })}
           </Text>
 
-          {eventsForSelectedDay.length === 0 ? (
+          {specificStudentEventsLoading ? (
             <View className="p-6 border border-gray-100 rounded-2xl items-center">
-              <Text className="text-gray-600">No events on this day.</Text>
+              <ActivityIndicator />
+              <Text className="mt-2 text-gray-600">Loading events…</Text>
+            </View>
+          ) : eventsForSelectedDay.length === 0 ? (
+            <View className="p-6 border border-gray-100 rounded-2xl items-center">
+              <Ionicons name="calendar-outline" size={18} color="#9CA3AF" />
+              <Text className="mt-1 text-gray-600">No events on this day.</Text>
             </View>
           ) : (
-            eventsForSelectedDay.map((e) => (
-              <EventRow
-                key={e.id}
-                name={e.name}
-                time={e.time}
-                avatar={e.avatar}
-                onPress={() => {}}
-              />
-            ))
+            eventsForSelectedDay.map((e) => <EventRow key={e.id} event={e} />)
           )}
         </View>
       </ScrollView>

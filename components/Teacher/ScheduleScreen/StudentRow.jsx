@@ -54,11 +54,15 @@ const StudentRow = ({ item, onViewCalendar }) => {
   };
 
   const handleCalendar = () => {
+    // console.log('item:\n' + JSON.stringify(item, null, 2));
+
     // Pass what your calendar screen needs:
     onViewCalendar?.({
-      teacherId: item?.teacher_id,
+      // teacherId: item?.teacher_id,
       studentId: item?.student_id,
-      tuitionDetailsId: item?.tuition_details_id,
+      // tuitionDetailsId: item?.tuition_details_id,
+      studentName: item?.student?.name,
+      customId: item?.student?.custom_id,
     });
   };
 
