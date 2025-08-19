@@ -1,4 +1,3 @@
-// TuitionEventForm.native.jsx
 import { useState } from "react";
 import {
   View,
@@ -8,11 +7,12 @@ import {
   ActivityIndicator,
   Platform,
   ScrollView,
-  SafeAreaView, // ← added
+  SafeAreaView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useDispatch, useSelector } from "react-redux";
+import { useLocalSearchParams } from "expo-router";
 
 /* ---------------- Helpers ---------------- */
 const pad2 = (n) => String(n).padStart(2, "0");
@@ -51,11 +51,11 @@ function Field({ label, icon, children, error }) {
 }
 
 /* ---------------- Main Form ---------------- */
-export default function TuitionEventForm({ selectedStudent, setIsModalOpen }) {
+export default function TuitionEventForm({ setIsModalOpen }) {
   const dispatch = useDispatch();
   const { submitting } = useSelector((s) => s.scheduleTuitionEvents);
 
-  const student = selectedStudent?.student || {};
+  const { studentName, customId } = useLocalSearchParams();
 
   // Local form state
   const [title, setTitle] = useState("");
@@ -94,42 +94,8 @@ export default function TuitionEventForm({ selectedStudent, setIsModalOpen }) {
         title: title.trim(),
         description: description.trim(),
         scheduled_at: scheduledAt,
-        setIsModalOpen,
       },
     });
-  };
-
-  /* ------ Date & Time pickers ------ */
-  const onPickDate = (event, date) => {
-    if (Platform.OS !== "ios") setShowDatePicker(false);
-    if (!date) return;
-    const base = scheduledDate || new Date();
-    date.setHours(
-      base.getHours(),
-      base.getMinutes(),
-      base.getSeconds() || 0,
-      0
-    );
-    setScheduledDate(date);
-    setScheduledAt(toSqlDateTime(date));
-    setErrors((prev) => ({ ...prev, scheduled_at: undefined }));
-  };
-
-  const onPickTime = (event, time) => {
-    if (Platform.OS !== "ios") setShowTimePicker(false);
-    if (!time) return;
-    const base = scheduledDate || new Date();
-    base.setHours(time.getHours(), time.getMinutes(), 0, 0);
-    const d = new Date(base);
-    setScheduledDate(d);
-    setScheduledAt(toSqlDateTime(d));
-    setErrors((prev) => ({ ...prev, scheduled_at: undefined }));
-  };
-
-  const clearSchedule = () => {
-    setScheduledDate(null);
-    setScheduledAt("");
-    setTouched((t) => ({ ...t, scheduled_at: true }));
   };
 
   return (
@@ -173,8 +139,8 @@ export default function TuitionEventForm({ selectedStudent, setIsModalOpen }) {
             <View className="mt-3 self-start flex-row items-center rounded-full bg-indigo-50 px-2.5 py-1">
               <Ionicons name="person-outline" size={12} color="#4F46E5" />
               <Text className="ml-1 text-[11px] font-semibold text-indigo-700">
-                {student?.name || "Unknown"}
-                {student?.custom_id ? ` • ${student.custom_id}` : ""}
+                {studentName || "Unknown"}
+                {customId ? ` • ${customId}` : ""}
               </Text>
             </View>
           </View>
@@ -216,11 +182,11 @@ export default function TuitionEventForm({ selectedStudent, setIsModalOpen }) {
                 }}
                 onBlur={() => setTouched((t) => ({ ...t, description: true }))}
                 placeholder="What will you cover?"
-                className="text-[14px] text-gray-900 h-28 py-2" // 👈 taller
+                className="text-[14px] text-gray-900 h-28 py-2"
                 placeholderTextColor="#9CA3AF"
                 multiline
                 numberOfLines={5}
-                textAlignVertical="top" // 👈 Android: top-align text
+                textAlignVertical="top"
                 blurOnSubmit={false}
               />
             </Field>

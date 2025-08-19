@@ -255,7 +255,12 @@ export default function StudentCalendarScreen() {
             </View>
 
             <TouchableOpacity
-              onPress={() => router.push("/calender/tuitionEventForm")}
+              onPress={() =>
+                router.push({
+                  pathname: "/calender/tuitionEventForm",
+                  params: { studentName: studentName, customId: customId },
+                })
+              }
               className="px-3 py-2 rounded-xl flex-row items-center"
               style={{ backgroundColor: "#EEF2FF" }}
             >
