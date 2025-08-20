@@ -1,4 +1,4 @@
-import React from "react";
+import { useMemo } from "react";
 import {
   View,
   Text,
@@ -9,44 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-
-/* ---------- dummy data (shape matches your web version) ---------- */
-const sample = {
-  status: "active", // active | pending | archived
-  is_active: 1,
-  student: {
-    id: "1",
-    name: "Sarah Johnson",
-    email: "sarah.j@example.com",
-    phone: "01734627514",
-    custom_id: "S01734627514", // S + 11 digits
-    initials: "SJ",
-    avatarColor: "#6D28D9",
-  },
-  tuition_details: {
-    tuition_type: "monthly_based", // monthly_based | course
-    class_level: "Class 9",
-    subject_list: ["Mathematics", "Physics", "English"],
-    medium: "English Version",
-    institute_name: "ABC Institute",
-    address_line: "123 Main St",
-    thana: "Dhanmondi",
-    district: "Dhaka",
-    study_purpose: "Exam Prep",
-    // monthly fields:
-    tuition_days_per_week: 5,
-    hours_per_day: 2,
-    days_name: ["Sat", "Mon", "Wed"],
-    starting_month: "January 2026",
-    salary_per_month: 20000,
-    // course fields (for preview switch type above):
-    // total_classes_per_course: 24,
-    // hours_per_class: 1.5,
-    // salary_per_subject: 1200,
-    // total_course_completion_salary: 9600,
-    // duration: "3 months",
-  },
-};
+import { useLocalSearchParams } from "expo-router";
 
 /* ---------- helpers ---------- */
 const C = {
@@ -59,7 +22,6 @@ const C = {
   slate: "#6B7280",
   violet: "#8B5CF6",
 };
-
 const labelType = (t) =>
   t === "monthly_based" ? "Monthly Based" : "Course Based";
 const money = (n) =>
@@ -67,8 +29,29 @@ const money = (n) =>
     .toString()
     .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
 const fmtArr = (a) => (Array.isArray(a) && a.length ? a.join(", ") : "—");
-const fullAddress = (t) =>
+const fullAddress = (t = {}) =>
   [t.address_line, t.thana, t.district].filter(Boolean).join(", ");
+
+const initialsFrom = (name = "") =>
+  (name.match(/\b\w/g) || []).slice(0, 2).join("").toUpperCase() || "ST";
+const stringToColor = (str = "") => {
+  const colors = [
+    "#8B5CF6",
+    "#F59E0B",
+    "#10B981",
+    "#3B82F6",
+    "#EF4444",
+    "#6366F1",
+    "#14B8A6",
+    "#F43F5E",
+    "#84CC16",
+    "#D946EF",
+  ];
+  let hash = 0;
+  for (let i = 0; i < str.length; i++)
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  return colors[Math.abs(hash) % colors.length];
+};
 
 /* ---------- small UI atoms ---------- */
 const StatusPill = ({ status }) => {
@@ -173,18 +156,41 @@ const Stat = ({ label, value, tone = "indigo" }) => {
 };
 
 /* ---------- main component ---------- */
-const StudentDetails = ({ data = sample }) => {
-  const { student, tuition_details, status, is_active } = data || {};
+export default function StudentDetails() {
+  const { conn } = useLocalSearchParams();
+
+  // parse the passed object safely
+  const data = useMemo(() => {
+    try {
+      return conn ? JSON.parse(decodeURIComponent(conn)) : null;
+    } catch (e) {
+      return null;
+    }
+  }, [conn]);
+
+  // derive fields from API shape
+  const student = data?.student || {};
+  const tuition_details = data?.tuition_details || {};
+  const displayStatus =
+    data?.status === "pending"
+      ? "pending"
+      : data?.is_active
+        ? "active"
+        : "archived";
+
+  // visuals
+  const initials = initialsFrom(student?.name || student?.custom_id || "");
+  const avatarColor = stringToColor(
+    student?.name || student?.custom_id || String(student?.id || "")
+  );
+
   const isMonthly = tuition_details?.tuition_type === "monthly_based";
 
-  const onCall = () => {
-    if (!student?.phone) return;
-    Linking.openURL(`tel:${student.phone}`).catch(() => {});
-  };
-  const onMail = () => {
-    if (!student?.email) return;
+  const onCall = () =>
+    student?.phone && Linking.openURL(`tel:${student.phone}`).catch(() => {});
+  const onMail = () =>
+    student?.email &&
     Linking.openURL(`mailto:${student.email}`).catch(() => {});
-  };
   const onDisconnect = () => {
     Alert.alert("Disconnect", `Disconnect ${student?.name}?`, [
       { text: "Cancel" },
@@ -204,22 +210,20 @@ const StudentDetails = ({ data = sample }) => {
             <View className="flex-row items-center">
               <View
                 className="w-12 h-12 rounded-full items-center justify-center mr-3"
-                style={{ backgroundColor: student?.avatarColor || C.indigo }}
+                style={{ backgroundColor: avatarColor }}
               >
-                <Text className="text-white font-bold">
-                  {student?.initials || "ST"}
-                </Text>
+                <Text className="text-white font-bold">{initials}</Text>
               </View>
               <View>
                 <Text className="text-[16px] font-semibold text-gray-900">
-                  {student?.name}
+                  {student?.name || "—"}
                 </Text>
                 <Text className="text-[12px] text-gray-500">
-                  {student?.email}
+                  {student?.email || "—"}
                 </Text>
               </View>
             </View>
-            <StatusPill status={status} />
+            <StatusPill status={displayStatus} />
           </View>
 
           {/* Quick actions */}
@@ -250,7 +254,7 @@ const StudentDetails = ({ data = sample }) => {
                 Email
               </Text>
             </Pressable>
-            {is_active ? (
+            {data?.is_active ? (
               <Pressable
                 onPress={onDisconnect}
                 className="h-10 px-3 rounded-xl items-center justify-center flex-row gap-1"
@@ -298,14 +302,14 @@ const StudentDetails = ({ data = sample }) => {
           <InfoRow
             icon="checkmark-circle-outline"
             color={
-              status === "active"
+              displayStatus === "active"
                 ? C.emerald
-                : status === "pending"
+                : displayStatus === "pending"
                   ? C.amber
                   : C.slate
             }
             label="Status"
-            value={status?.[0]?.toUpperCase() + status?.slice(1)}
+            value={displayStatus?.[0]?.toUpperCase() + displayStatus?.slice(1)}
           />
         </View>
 
@@ -321,7 +325,7 @@ const StudentDetails = ({ data = sample }) => {
                 style={{ backgroundColor: "#F3F4F6" }}
               >
                 <Text className="text-[11px] font-semibold text-gray-700">
-                  {tuition_details?.class_level}
+                  {tuition_details?.class_level || "—"}
                 </Text>
               </View>
             }
@@ -395,7 +399,7 @@ const StudentDetails = ({ data = sample }) => {
             />
             <View className="flex-row flex-wrap mt-1">
               {(tuition_details?.subject_list || []).map((s) => (
-                <Chip key={s} label={s} tone="indigo" />
+                <Chip key={String(s)} label={String(s)} tone="indigo" />
               ))}
               {!tuition_details?.subject_list?.length && (
                 <Text className="text-[13px] text-gray-500">—</Text>
@@ -426,7 +430,7 @@ const StudentDetails = ({ data = sample }) => {
               <Text className="text-[11px] text-gray-500 mt-2">Days</Text>
               <View className="flex-row flex-wrap mt-1">
                 {(tuition_details?.days_name || []).map((d) => (
-                  <Chip key={d} label={d} tone="sky" />
+                  <Chip key={String(d)} label={String(d)} tone="sky" />
                 ))}
               </View>
             </View>
@@ -461,6 +465,4 @@ const StudentDetails = ({ data = sample }) => {
       </ScrollView>
     </SafeAreaView>
   );
-};
-
-export default StudentDetails;
+}

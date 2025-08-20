@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -6,63 +6,14 @@ import {
   TouchableOpacity,
   TextInput,
   FlatList,
+  ActivityIndicator,
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useDispatch, useSelector } from "react-redux";
 
-/* ------------ Sample Data ------------ */
-const STUDENTS = [
-  {
-    id: "1",
-    name: "Sarah Johnson",
-    email: "sarah.j@example.com",
-    custom_id: "S01734627514",
-    phone: "01734627514",
-    class_level: "Class 9",
-    initials: "SJ",
-    avatarColor: "#6D28D9",
-    status: "active",
-    subjects: ["Mathematics", "Physics"],
-  },
-  {
-    id: "2",
-    name: "Michael Chen",
-    email: "michael.c@example.com",
-    custom_id: "S01987654321",
-    phone: "01812345678",
-    class_level: "Class 10",
-    initials: "MC",
-    avatarColor: "#10B981",
-    status: "active",
-    subjects: ["Chemistry", "Biology"],
-  },
-  {
-    id: "3",
-    name: "Alex Thompson",
-    email: "alex.t@example.com",
-    custom_id: "S01234567890",
-    phone: "01699887766",
-    class_level: "Class 12",
-    initials: "AT",
-    avatarColor: "#F81D7F",
-    status: "pending",
-    subjects: ["Advanced Mathematics"],
-  },
-  {
-    id: "4",
-    name: "Priya Das",
-    email: "priya.d@example.com",
-    custom_id: "S01827363828",
-    phone: "01722223333",
-    class_level: "Class 8",
-    initials: "PD",
-    avatarColor: "#2563EB",
-    status: "archived",
-    subjects: ["Mathematics"],
-  },
-];
-
+/* ------------ Tab config & filter mapping ------------ */
 const TABS = [
   {
     key: "active",
@@ -79,8 +30,36 @@ const TABS = [
   },
 ];
 
+const FILTERS_BY_TAB = {
+  active: { status: "accepted", is_active: 1 },
+  pending: { status: "pending" },
+  archived: { status: "accepted", is_active: 0 },
+};
+
+/* ------------ Small helpers ------------ */
+const initialsFrom = (name = "") =>
+  (name.match(/\b\w/g) || []).slice(0, 2).join("").toUpperCase();
+const stringToColor = (str = "") => {
+  const colors = [
+    "#8B5CF6",
+    "#F59E0B",
+    "#10B981",
+    "#3B82F6",
+    "#EF4444",
+    "#6366F1",
+    "#14B8A6",
+    "#F43F5E",
+    "#84CC16",
+    "#D946EF",
+  ];
+  let hash = 0;
+  for (let i = 0; i < str.length; i++)
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  return colors[Math.abs(hash) % colors.length];
+};
+
 /* ------------ Small UI bits ------------ */
-const StatusPill = ({ status }) => {
+const StatusPill = ({ statusKey }) => {
   const map = {
     active: {
       bg: "bg-emerald-100",
@@ -100,7 +79,12 @@ const StatusPill = ({ status }) => {
       ic: "archive",
       color: "#111827",
     },
-  }[status];
+  }[statusKey] || {
+    bg: "bg-gray-100",
+    txt: "text-gray-800",
+    ic: "help",
+    color: "#111827",
+  };
 
   return (
     <View
@@ -108,7 +92,7 @@ const StatusPill = ({ status }) => {
     >
       <Ionicons name={map.ic} size={14} color={map.color} />
       <Text className={`ml-1 text-xs font-semibold ${map.txt}`}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+        {statusKey.charAt(0).toUpperCase() + statusKey.slice(1)}
       </Text>
     </View>
   );
@@ -134,145 +118,196 @@ const InfoCell = ({ icon, color, label, value }) => (
         className="text-[13px] font-semibold text-gray-900 mt-0.5"
         numberOfLines={1}
       >
-        {value}
+        {value ?? "—"}
       </Text>
     </View>
   </View>
 );
 
-const ActionButton = ({ icon, color, bg, label, onPress }) => (
-  <TouchableOpacity
-    onPress={onPress}
-    className="flex-1 h-10 rounded-xl items-center justify-center flex-row gap-1"
-    style={{ backgroundColor: bg }}
-  >
-    <Ionicons name={icon} size={16} color={color} />
-    <Text className="text-[12px] font-semibold" style={{ color }}>
-      {label}
-    </Text>
-  </TouchableOpacity>
-);
-
-/* ------------ Card ------------ */
-const StudentCard = ({ item, onView, onEdit, onDelete }) => (
-  <View className="bg-white rounded-2xl p-4  border border-gray-100 shadow-sm">
-    {/* Top row: avatar, name/email, status */}
-    <View className="flex-row justify-between items-start">
-      <View className="flex-row items-center">
-        <View
-          className="w-12 h-12 rounded-full items-center justify-center mr-3"
-          style={{ backgroundColor: item.avatarColor }}
-        >
-          <Text className="text-white font-bold">{item.initials}</Text>
-        </View>
-        <View>
-          <Text className="text-[16px] font-semibold text-gray-900">
-            {item.name}
-          </Text>
-          <Text className="text-[12px] text-gray-500">{item.email}</Text>
-        </View>
-      </View>
-      <StatusPill status={item.status} />
-    </View>
-
-    {/* Details grid */}
-    <View className="mt-3 gap-3">
-      <View className="flex-row gap-3">
-        <InfoCell
-          icon="card-outline"
-          color="#4F46E5"
-          label="Student ID"
-          value={item.custom_id}
-        />
-        <InfoCell
-          icon="call-outline"
-          color="#0EA5E9"
-          label="Phone"
-          value={item.phone}
-        />
-      </View>
-      <View className="flex-row gap-3">
-        <InfoCell
-          icon="school-outline"
-          color="#10B981"
-          label="Class Level"
-          value={item.class_level}
-        />
-        <View className="flex-1" />
-      </View>
-    </View>
-
-    {/* Subjects */}
-    {item.subjects?.length ? (
-      <View className="mt-3">
-        <Text className="text-[11px] text-gray-500 mb-1">Subjects</Text>
-        <View className="flex-row flex-wrap">
-          {item.subjects.map((s) => (
-            <SubjectChip key={s} label={s} />
-          ))}
-        </View>
-      </View>
-    ) : null}
-
-    {/* Actions */}
-    <View className="mt-4 flex-row gap-2">
-      <ActionButton
-        icon="eye-outline"
-        label="View"
-        color="#0369A1"
-        bg="#E0F2FE"
-        onPress={() => onView(item)}
-      />
-      <ActionButton
-        icon="create-outline"
-        label="Edit"
-        color="#4338CA"
-        bg="#EDE9FE"
-        onPress={() => onEdit(item)}
-      />
-      <ActionButton
-        icon="trash-outline"
-        label="Delete"
-        color="#BE123C"
-        bg="#FFE4E6"
-        onPress={() => onDelete(item)}
-      />
-    </View>
-  </View>
-);
-
-/* ------------ Screen ------------ */
-const StudentsScreen = () => {
-  const router = useRouter();
-  const [activeTab, setActiveTab] = useState("active");
-  const [query, setQuery] = useState("");
-
-  const counts = useMemo(
-    () =>
-      TABS.reduce((acc, t) => {
-        acc[t.key] = STUDENTS.filter((s) => s.status === t.key).length;
-        return acc;
-      }, {}),
-    []
+/* ------------ Card (reads API shape directly) ------------ */
+const StudentCard = ({ item, onView, onEdit, onDelete }) => {
+  const s = item?.student || {};
+  const td = item?.tuition_details || {};
+  const initials = initialsFrom(s.name || s.custom_id || "");
+  const avatarColor = stringToColor(
+    s.name || s.custom_id || String(s.id || "")
   );
 
-  const filtered = useMemo(() => {
-    const base = STUDENTS.filter((s) => s.status === activeTab);
-    if (!query.trim()) return base;
-    const q = query.toLowerCase();
-    return base.filter(
-      (s) =>
-        s.name.toLowerCase().includes(q) ||
-        s.email.toLowerCase().includes(q) ||
-        s.custom_id.toLowerCase().includes(q) ||
-        s.phone.toLowerCase().includes(q) ||
-        s.subjects?.some((sub) => sub.toLowerCase().includes(q))
-    );
-  }, [activeTab, query]);
+  // statusKey for pill (for display only)
+  const statusKey =
+    item?.status === "pending"
+      ? "pending"
+      : item?.is_active
+        ? "active"
+        : "archived";
 
-  const onView = () => router.push("/studentDetails");
-  const onEdit = (item) => Alert.alert("Edit", `Edit ${item.name}`);
-  const onDelete = (item) => Alert.alert("Delete", `Delete ${item.name}?`);
+  return (
+    <View className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+      {/* Top row */}
+      <View className="flex-row justify-between items-start">
+        <View className="flex-row items-center">
+          <View
+            className="w-12 h-12 rounded-full items-center justify-center mr-3"
+            style={{ backgroundColor: avatarColor }}
+          >
+            <Text className="text-white font-bold">{initials || "ST"}</Text>
+          </View>
+          <View>
+            <Text className="text-[16px] font-semibold text-gray-900">
+              {s.name || "—"}
+            </Text>
+            <Text className="text-[12px] text-gray-500">{s.email || "—"}</Text>
+          </View>
+        </View>
+        <StatusPill statusKey={statusKey} />
+      </View>
+
+      {/* Details */}
+      <View className="mt-3 gap-3">
+        <View className="flex-row gap-3">
+          <InfoCell
+            icon="card-outline"
+            color="#4F46E5"
+            label="Student ID"
+            value={s.custom_id}
+          />
+          <InfoCell
+            icon="call-outline"
+            color="#0EA5E9"
+            label="Phone"
+            value={s.phone}
+          />
+        </View>
+        <View className="flex-row gap-3">
+          <InfoCell
+            icon="school-outline"
+            color="#10B981"
+            label="Class Level"
+            value={td.class_level}
+          />
+          <View className="flex-1" />
+        </View>
+      </View>
+
+      {/* Subjects */}
+      {Array.isArray(td.subject_list) && td.subject_list.length > 0 ? (
+        <View className="mt-3">
+          <Text className="text-[11px] text-gray-500 mb-1">Subjects</Text>
+          <View className="flex-row flex-wrap">
+            {td.subject_list.map((sub) => (
+              <SubjectChip key={sub} label={String(sub)} />
+            ))}
+          </View>
+        </View>
+      ) : null}
+
+      {/* Actions */}
+      <View className="mt-4 flex-row gap-2">
+        <TouchableOpacity
+          onPress={() => onView(item)}
+          className="flex-1 h-10 rounded-xl items-center justify-center flex-row gap-1"
+          style={{ backgroundColor: "#E0F2FE" }}
+        >
+          <Ionicons name="eye-outline" size={16} color="#0369A1" />
+          <Text
+            className="text-[12px] font-semibold"
+            style={{ color: "#0369A1" }}
+          >
+            View
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => onEdit(item)}
+          className="flex-1 h-10 rounded-xl items-center justify-center flex-row gap-1"
+          style={{ backgroundColor: "#EDE9FE" }}
+        >
+          <Ionicons name="create-outline" size={16} color="#4338CA" />
+          <Text
+            className="text-[12px] font-semibold"
+            style={{ color: "#4338CA" }}
+          >
+            Edit
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => onDelete(item)}
+          className="flex-1 h-10 rounded-xl items-center justify-center flex-row gap-1"
+          style={{ backgroundColor: "#FFE4E6" }}
+        >
+          <Ionicons name="trash-outline" size={16} color="#BE123C" />
+          <Text
+            className="text-[12px] font-semibold"
+            style={{ color: "#BE123C" }}
+          >
+            Delete
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
+
+/* ------------ Screen ------------ */
+export default function StudentsScreen() {
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const {
+    connectionRequests = [],
+    pagination,
+    loading,
+  } = useSelector((s) => s.studentManagement);
+
+  const [activeTab, setActiveTab] = useState("active");
+  const [query, setQuery] = useState("");
+  const searchTimerRef = useRef(null);
+
+  // Initial + tab change fetch
+  useEffect(() => {
+    const filters = {
+      ...FILTERS_BY_TAB[activeTab],
+      per_page: 20,
+      page: 1,
+    };
+    if (query.trim()) filters.search = query.trim();
+    dispatch({ type: "FETCH_CONNECTION_REQUESTS", payload: { filters } });
+    // clear any pending debounce when tab changes
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current);
+      searchTimerRef.current = null;
+    }
+  }, [activeTab, dispatch]); // eslint-disable-line
+
+  // Debounced search (300ms)
+  const onChangeQuery = (text) => {
+    setQuery(text);
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
+      const filters = {
+        ...FILTERS_BY_TAB[activeTab],
+        per_page: 10,
+        page: 1,
+      };
+      if (text.trim()) filters.search = text.trim();
+      dispatch({ type: "FETCH_CONNECTION_REQUESTS", payload: { filters } });
+    }, 300);
+  };
+
+  const onView = (conn) => {
+    router.push({
+      pathname: "/studentDetails",
+      params: {
+        // pass the entire object as a string
+        conn: encodeURIComponent(JSON.stringify(conn)),
+      },
+    });
+  };
+
+  const onEdit = (item) =>
+    Alert.alert("Edit", `Edit ${item?.student?.name || ""}`);
+  const onDelete = (item) =>
+    Alert.alert("Delete", `Delete ${item?.student?.name || ""}?`);
 
   const Header = (
     <>
@@ -289,15 +324,29 @@ const StudentsScreen = () => {
         </View>
 
         {/* Search */}
-        <View className="mt-4 bg-white/15 rounded-xl px-3 py-2 flex-row items-center border border-white/20">
+        <View
+          className="mt-4 rounded-xl px-3 py-2 flex-row items-center border"
+          style={{
+            backgroundColor: "rgba(255,255,255,0.15)",
+            borderColor: "rgba(255,255,255,0.2)",
+          }}
+        >
           <Ionicons name="search" size={16} color="white" />
           <TextInput
             value={query}
-            onChangeText={setQuery}
+            onChangeText={onChangeQuery}
             placeholder="Search by name, email, ID, phone, subject…"
-            placeholderTextColor="rgba(255,255,255,0.8)"
+            placeholderTextColor="rgba(255,255,255,0.85)"
             className="ml-2 text-white flex-1"
+            returnKeyType="search"
           />
+          {loading ? (
+            <ActivityIndicator size="small" />
+          ) : !!query ? (
+            <TouchableOpacity onPress={() => onChangeQuery("")}>
+              <Ionicons name="close-circle" size={18} color="#fff" />
+            </TouchableOpacity>
+          ) : null}
         </View>
       </View>
 
@@ -307,13 +356,14 @@ const StudentsScreen = () => {
           <View className="flex-row p-2">
             {TABS.map((t) => {
               const isActive = activeTab === t.key;
+              const countChip = isActive
+                ? connectionRequests?.length || 0
+                : null; // only show count for active tab
               return (
                 <TouchableOpacity
                   key={t.key}
                   onPress={() => setActiveTab(t.key)}
-                  className={`flex-row items-center px-3 py-2 rounded-xl mr-2 ${
-                    isActive ? "" : "opacity-70"
-                  }`}
+                  className={`flex-row items-center px-3 py-2 rounded-xl mr-2 ${isActive ? "" : "opacity-70"}`}
                   style={{
                     backgroundColor: isActive ? `${t.color}22` : "transparent",
                   }}
@@ -325,14 +375,16 @@ const StudentsScreen = () => {
                   >
                     {t.label}
                   </Text>
-                  <View
-                    className="ml-2 px-1.5 rounded-md"
-                    style={{ backgroundColor: `${t.color}22` }}
-                  >
-                    <Text className="text-[11px]" style={{ color: t.color }}>
-                      {counts[t.key] || 0}
-                    </Text>
-                  </View>
+                  {countChip !== null && (
+                    <View
+                      className="ml-2 px-1.5 rounded-md"
+                      style={{ backgroundColor: `${t.color}22` }}
+                    >
+                      <Text className="text-[11px]" style={{ color: t.color }}>
+                        {countChip}
+                      </Text>
+                    </View>
+                  )}
                 </TouchableOpacity>
               );
             })}
@@ -342,11 +394,17 @@ const StudentsScreen = () => {
     </>
   );
 
+  const EmptyState = (
+    <View className="px-4 pt-6">
+      <Text className="text-gray-500">No students found.</Text>
+    </View>
+  );
+
   return (
     <SafeAreaView className="flex-1 bg-white">
       <FlatList
-        data={filtered}
-        keyExtractor={(it) => it.id}
+        data={connectionRequests}
+        keyExtractor={(it) => String(it.id)}
         renderItem={({ item }) => (
           <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
             <StudentCard
@@ -358,7 +416,17 @@ const StudentsScreen = () => {
           </View>
         )}
         ListHeaderComponent={Header}
-        ListFooterComponent={<View style={{ height: 16 }} />}
+        ListFooterComponent={
+          loading ? (
+            <View className="py-4 items-center">
+              <ActivityIndicator />
+              <Text className="mt-2 text-xs text-gray-500">Loading…</Text>
+            </View>
+          ) : (
+            <View style={{ height: 16 }} />
+          )
+        }
+        ListEmptyComponent={!loading ? EmptyState : null}
         contentContainerStyle={{ paddingBottom: 24 }}
         showsVerticalScrollIndicator={false}
         keyboardDismissMode="on-drag"
@@ -367,6 +435,4 @@ const StudentsScreen = () => {
       />
     </SafeAreaView>
   );
-};
-
-export default StudentsScreen;
+}
