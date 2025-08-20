@@ -6,6 +6,7 @@ import rootSaga from "../sagas/rootSaga";
 import authReducer from "../slices/Auth/authSlice";
 import connectStudentsReducer from "../slices/Teacher/ConnectStudents/connectStudentSlice";
 import scheduleTuitionEventsReducer from "../slices/Teacher/Schedule/scheduleTuitionEventsSlice";
+import studentManagementReducer from "../slices/Teacher/StudentManagement/studentManagementSlice";
 import { authPersistConfig } from "./persistConfig";
 
 import { router } from "expo-router";
@@ -20,6 +21,7 @@ export const store = configureStore({
     auth: persistedAuthReducer, // only this is persisted
     connectStudents: connectStudentsReducer,
     scheduleTuitionEvents: scheduleTuitionEventsReducer,
+    studentManagement: studentManagementReducer,
   },
   middleware: (getDefault) =>
     getDefault({
