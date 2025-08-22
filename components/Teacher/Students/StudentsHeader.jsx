@@ -1,22 +1,23 @@
+import React from "react";
 import {
   View,
   Text,
-  ActivityIndicator,
   TouchableOpacity,
   TextInput,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
 
-const Header = ({
+export default function StudentsHeader({
+  tabs = [],
+  activeTab,
+  onTabChange,
   query,
   onChangeQuery,
   loading,
-  connectionRequests,
-  TABS,
-  activeTab,
-  setActiveTab,
-}) => {
+  countsByKey = {},
+  onAddPress,
+}) {
   return (
     <>
       {/* Hero header */}
@@ -25,7 +26,10 @@ const Header = ({
           <Text className="text-white text-2xl font-extrabold">
             My Students
           </Text>
-          <TouchableOpacity className="bg-white/90 px-3 py-2 rounded-xl flex-row items-center">
+          <TouchableOpacity
+            onPress={onAddPress}
+            className="bg-white/90 px-3 py-2 rounded-xl flex-row items-center"
+          >
             <Ionicons name="person-add-outline" size={16} color="#111827" />
             <Text className="ml-1 font-semibold text-gray-900">Add</Text>
           </TouchableOpacity>
@@ -62,15 +66,14 @@ const Header = ({
       <View className="px-4 mt-3">
         <View className="bg-white rounded-2xl shadow border border-gray-100">
           <View className="flex-row p-2">
-            {TABS.map((t) => {
+            {tabs.map((t) => {
               const isActive = activeTab === t.key;
-              const countChip = isActive
-                ? connectionRequests?.length || 0
-                : null; // only show count for active tab
+              const countChip = countsByKey[t.key] ?? 0; // always show
+
               return (
                 <TouchableOpacity
                   key={t.key}
-                  onPress={() => setActiveTab(t.key)}
+                  onPress={() => onTabChange(t.key)}
                   className={`flex-row items-center px-3 py-2 rounded-xl mr-2 ${isActive ? "" : "opacity-70"}`}
                   style={{
                     backgroundColor: isActive ? `${t.color}22` : "transparent",
@@ -83,16 +86,15 @@ const Header = ({
                   >
                     {t.label}
                   </Text>
-                  {countChip !== null && (
-                    <View
-                      className="ml-2 px-1.5 rounded-md"
-                      style={{ backgroundColor: `${t.color}22` }}
-                    >
-                      <Text className="text-[11px]" style={{ color: t.color }}>
-                        {countChip}
-                      </Text>
-                    </View>
-                  )}
+
+                  <View
+                    className="ml-2 px-1.5 rounded-md"
+                    style={{ backgroundColor: `${t.color}22` }}
+                  >
+                    <Text className="text-[11px]" style={{ color: t.color }}>
+                      {countChip}
+                    </Text>
+                  </View>
                 </TouchableOpacity>
               );
             })}
@@ -101,6 +103,4 @@ const Header = ({
       </View>
     </>
   );
-};
-
-export default Header;
+}

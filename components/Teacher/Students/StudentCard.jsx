@@ -1,9 +1,11 @@
+import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-/* ------------ Small helpers ------------ */
+/* ------------ Small helpers (local to the card) ------------ */
 const initialsFrom = (name = "") =>
   (name.match(/\b\w/g) || []).slice(0, 2).join("").toUpperCase();
+
 const stringToColor = (str = "") => {
   const colors = [
     "#8B5CF6",
@@ -23,7 +25,6 @@ const stringToColor = (str = "") => {
   return colors[Math.abs(hash) % colors.length];
 };
 
-/* ------------ Small UI bits ------------ */
 const StatusPill = ({ statusKey }) => {
   const map = {
     active: {
@@ -89,7 +90,8 @@ const InfoCell = ({ icon, color, label, value }) => (
   </View>
 );
 
-const StudentCard = ({ item, onView, onEdit, onDelete }) => {
+/* ------------ Card ------------ */
+export default function StudentCard({ item, onView, onEdit, onDelete }) {
   const s = item?.student || {};
   const td = item?.tuition_details || {};
   const initials = initialsFrom(s.name || s.custom_id || "");
@@ -97,7 +99,6 @@ const StudentCard = ({ item, onView, onEdit, onDelete }) => {
     s.name || s.custom_id || String(s.id || "")
   );
 
-  // statusKey for pill (for display only)
   const statusKey =
     item?.status === "pending"
       ? "pending"
@@ -159,7 +160,7 @@ const StudentCard = ({ item, onView, onEdit, onDelete }) => {
           <Text className="text-[11px] text-gray-500 mb-1">Subjects</Text>
           <View className="flex-row flex-wrap">
             {td.subject_list.map((sub) => (
-              <SubjectChip key={sub} label={String(sub)} />
+              <SubjectChip key={String(sub)} label={String(sub)} />
             ))}
           </View>
         </View>
@@ -211,6 +212,4 @@ const StudentCard = ({ item, onView, onEdit, onDelete }) => {
       </View>
     </View>
   );
-};
-
-export default StudentCard;
+}
