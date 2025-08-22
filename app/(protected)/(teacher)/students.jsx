@@ -256,6 +256,7 @@ export default function StudentsScreen() {
   const {
     connectionRequests = [],
     pagination,
+    connectionCount,
     loading,
   } = useSelector((s) => s.studentManagement);
 
@@ -263,11 +264,15 @@ export default function StudentsScreen() {
   const [query, setQuery] = useState("");
   const searchTimerRef = useRef(null);
 
+  useEffect(() => {
+    dispatch({ type: "CONNECTION_COUNT" });
+  }, [dispatch]);
+
   // Initial + tab change fetch
   useEffect(() => {
     const filters = {
       ...FILTERS_BY_TAB[activeTab],
-      per_page: 20,
+      per_page: 10,
       page: 1,
     };
     if (query.trim()) filters.search = query.trim();
@@ -308,6 +313,15 @@ export default function StudentsScreen() {
     Alert.alert("Edit", `Edit ${item?.student?.name || ""}`);
   const onDelete = (item) =>
     Alert.alert("Delete", `Delete ${item?.student?.name || ""}?`);
+
+  const countByKey = useMemo(
+    () => ({
+      active: connectionCount?.active_accepted ?? 0,
+      pending: connectionCount?.pending ?? 0,
+      archived: connectionCount?.inactive_accepted ?? 0,
+    }),
+    [connectionCount]
+  );
 
   const Header = (
     <>
@@ -356,9 +370,7 @@ export default function StudentsScreen() {
           <View className="flex-row p-2">
             {TABS.map((t) => {
               const isActive = activeTab === t.key;
-              const countChip = isActive
-                ? connectionRequests?.length || 0
-                : null; // only show count for active tab
+              const countChip = countByKey[t.key];
               return (
                 <TouchableOpacity
                   key={t.key}
@@ -431,7 +443,7 @@ export default function StudentsScreen() {
         showsVerticalScrollIndicator={false}
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
-        contentInsetAdjustmentBehavior="automatic"
+        contentInsetAdjustmentBehavior="never"
       />
     </SafeAreaView>
   );
