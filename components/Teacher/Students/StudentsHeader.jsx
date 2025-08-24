@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-export default function StudentsHeader({
+function StudentsHeader({
   tabs = [],
   activeTab,
   onTabChange,
@@ -47,7 +47,7 @@ export default function StudentsHeader({
           <TextInput
             value={query}
             onChangeText={onChangeQuery}
-            placeholder="Search by name, email, ID, phone, subject…"
+            placeholder="Search by student name"
             placeholderTextColor="rgba(255,255,255,0.85)"
             className="ml-2 text-white flex-1"
             returnKeyType="search"
@@ -104,3 +104,4 @@ export default function StudentsHeader({
     </>
   );
 }
+export default memo(StudentsHeader);

@@ -107,6 +107,28 @@ export default function StudentsScreen() {
     [connectionCount]
   );
 
+  const headerEl = useMemo(
+    () => (
+      <StudentsHeader
+        tabs={TABS}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        query={query}
+        onChangeQuery={onChangeQuery}
+        loading={loading}
+        countsByKey={countByKey}
+        onAddPress={onAddPress}
+      />
+    ),
+    [activeTab, query, loading, countByKey]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    };
+  }, []);
+
   return (
     <SafeAreaView className="flex-1 bg-white">
       <FlatList
@@ -122,18 +144,7 @@ export default function StudentsScreen() {
             />
           </View>
         )}
-        ListHeaderComponent={() => (
-          <StudentsHeader
-            tabs={TABS}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            query={query}
-            onChangeQuery={onChangeQuery}
-            loading={loading}
-            countsByKey={countByKey}
-            onAddPress={onAddPress}
-          />
-        )}
+        ListHeaderComponent={headerEl}
         ListFooterComponent={
           loading ? (
             <View className="px-4 py-4">
