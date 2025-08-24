@@ -1,41 +1,57 @@
-import React from "react";
-import { View, Text, Image, TouchableOpacity } from "react-native";
+// Header.js
+import React, { useEffect, useMemo, useState } from "react";
+import { View, Text, TouchableOpacity } from "react-native";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { useDispatch } from "react-redux";
 import { useRouter } from "expo-router";
+import useAuth from "../../../hooks/useAuth";
+import InitialsAvatar from "../../ui/InitialsAvatar";
 
-const Header = () => {
+function getGreeting(d = new Date()) {
+  const h = d.getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
+}
+
+export default function Header() {
+  const [greeting, setGreeting] = useState(getGreeting());
+  const { user } = useAuth();
   const dispatch = useDispatch();
   const router = useRouter();
+
+  const displayName = user?.name || "JT";
+
+  useEffect(() => {
+    const id = setInterval(() => setGreeting(getGreeting()), 60 * 1000);
+    return () => clearInterval(id);
+  }, []);
 
   const onLogout = () => {
     dispatch({
       type: "LOGOUT",
-      payload: { navigate: (path) => router.replace(path) },
+      payload: { navigate: (p) => router.replace(p) },
     });
   };
 
   return (
     <View>
-      {/* top row */}
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center">
           <View className="mr-3">
-            {/* avatar with glow */}
-            <View className="w-14 h-14 rounded-full items-center justify-center bg-white/15">
-              <Image
-                source={{
-                  uri: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-                }}
-                className="w-12 h-12 rounded-full"
-              />
-            </View>
+            <InitialsAvatar
+              name={displayName}
+              size={48} // inner circle (was w-12 h-12)
+              showGlow // adds outer soft glow
+              glowPadding={4} // makes total ~56px (matches your old w-14)
+              glowBgClass="bg-white/15"
+            />
           </View>
 
           <View>
-            <Text className="text-white/80 text-xs">Good morning 👋</Text>
+            <Text className="text-white/80 text-xs">{greeting}</Text>
             <Text className="text-white font-bold text-xl leading-6">
-              Prof. Anderson
+              {displayName}
             </Text>
           </View>
         </View>
@@ -60,6 +76,4 @@ const Header = () => {
       </View>
     </View>
   );
-};
-
-export default Header;
+}

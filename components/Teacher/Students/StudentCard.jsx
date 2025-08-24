@@ -1,29 +1,6 @@
-import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-
-/* ------------ Small helpers (local to the card) ------------ */
-const initialsFrom = (name = "") =>
-  (name.match(/\b\w/g) || []).slice(0, 2).join("").toUpperCase();
-
-const stringToColor = (str = "") => {
-  const colors = [
-    "#8B5CF6",
-    "#F59E0B",
-    "#10B981",
-    "#3B82F6",
-    "#EF4444",
-    "#6366F1",
-    "#14B8A6",
-    "#F43F5E",
-    "#84CC16",
-    "#D946EF",
-  ];
-  let hash = 0;
-  for (let i = 0; i < str.length; i++)
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  return colors[Math.abs(hash) % colors.length];
-};
+import InitialsAvatar from "../../ui/InitialsAvatar";
 
 const StatusPill = ({ statusKey }) => {
   const map = {
@@ -94,10 +71,6 @@ const InfoCell = ({ icon, color, label, value }) => (
 export default function StudentCard({ item, onView, onEdit, onDelete }) {
   const s = item?.student || {};
   const td = item?.tuition_details || {};
-  const initials = initialsFrom(s.name || s.custom_id || "");
-  const avatarColor = stringToColor(
-    s.name || s.custom_id || String(s.id || "")
-  );
 
   const statusKey =
     item?.status === "pending"
@@ -111,11 +84,12 @@ export default function StudentCard({ item, onView, onEdit, onDelete }) {
       {/* Top row */}
       <View className="flex-row justify-between items-start">
         <View className="flex-row items-center">
-          <View
-            className="w-12 h-12 rounded-full items-center justify-center mr-3"
-            style={{ backgroundColor: avatarColor }}
-          >
-            <Text className="text-white font-bold">{initials || "ST"}</Text>
+          <View className="w-12 h-12 rounded-full items-center justify-center mr-3">
+            <InitialsAvatar
+              name={s.name || s.custom_id || "ST"}
+              size={40}
+              rounded
+            />
           </View>
           <View>
             <Text className="text-[16px] font-semibold text-gray-900">

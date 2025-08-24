@@ -4,6 +4,7 @@ import Header from "../../../components/Teacher/HomeScreen/Header";
 import QuickSummary from "../../../components/Teacher/HomeScreen/QuickSummary";
 import StatsGrid from "../../../components/Teacher/HomeScreen/StatsGrid";
 import TodaysSchedule from "../../../components/Teacher/HomeScreen/TodaysSchedule";
+import RecentActivity from "../../../components/Teacher/HomeScreen/RecentActivity";
 
 const HomeScreen = () => {
   return (
@@ -24,6 +25,10 @@ const HomeScreen = () => {
 
           <View className="mt-6">
             <TodaysSchedule />
+          </View>
+
+          <View className="mt-6">
+            <RecentActivity />
           </View>
         </View>
       </ScrollView>

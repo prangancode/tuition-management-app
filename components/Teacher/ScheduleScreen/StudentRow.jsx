@@ -2,29 +2,7 @@ import { View, Text, TouchableOpacity, Linking } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import InfoRow from "./InfoRow";
 import SubjectChip from "./SubjectChip";
-/** Utilities */
-const initialsFrom = (name = "") =>
-  (name.match(/\b\w/g) || []).slice(0, 2).join("").toUpperCase() || "ST";
-
-const stringToColor = (str = "") => {
-  const colors = [
-    "#8B5CF6",
-    "#F59E0B",
-    "#10B981",
-    "#3B82F6",
-    "#EF4444",
-    "#6366F1",
-    "#14B8A6",
-    "#F43F5E",
-    "#84CC16",
-    "#D946EF",
-  ];
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return colors[Math.abs(hash) % colors.length];
-};
+import InitialsAvatar from "../../ui/InitialsAvatar";
 
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
@@ -41,10 +19,6 @@ const StudentRow = ({ item, onViewCalendar }) => {
   const classLevel = td?.class_level || "—";
   const medium = td?.medium || "—";
   const area = td?.address_line || td?.thana || td?.district || "—";
-
-  const avatarColor = stringToColor(
-    student?.name || student?.custom_id || String(item?.student_id || "")
-  );
 
   const handleCall = () => {
     if (phone && phone !== "—") Linking.openURL(`tel:${phone}`);
@@ -69,17 +43,14 @@ const StudentRow = ({ item, onViewCalendar }) => {
   return (
     <View className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
       {/* Accent top bar */}
-      <View className="h-1.5" style={{ backgroundColor: avatarColor }} />
+      <View className="h-1.5" />
 
       <View className="p-4">
         {/* Top row */}
         <View className="flex-row justify-between items-start">
           <View className="flex-row items-center">
-            <View
-              className="w-12 h-12 rounded-full items-center justify-center mr-3"
-              style={{ backgroundColor: avatarColor }}
-            >
-              <Text className="text-white font-bold">{initialsFrom(name)}</Text>
+            <View className="w-12 h-12 rounded-full items-center justify-center mr-3">
+              <InitialsAvatar name={name || "ST"} size={40} rounded />
             </View>
 
             <View className="max-w-[70%]">
