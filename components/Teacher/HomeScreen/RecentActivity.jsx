@@ -8,7 +8,7 @@ import ActivityItemSkeleton from "./ActivityItemSkeleton";
 /* ---------- time ago ---------- */
 const timeAgo = (d) => {
   const t = typeof d === "string" ? new Date(d) : d;
-  const diff = Math.max(0, Date.now() - t.getTime());
+  const diff = Math.max(0, Date.now() - (t?.getTime?.() ?? 0));
   const m = Math.floor(diff / 60000);
   if (m < 1) return "just now";
   if (m < 60) return `${m}m ago`;
@@ -34,15 +34,15 @@ const deriveAction = (title = "", body = "") => {
 const typeStyle = (notifType) => {
   switch (notifType) {
     case "tuition_event":
-      return { icon: "calendar-outline", tint: "#4F46E5" }; // indigo
+      return { icon: "calendar-outline", tint: "#4F46E5" };
     case "connection_request":
-      return { icon: "person-add-outline", tint: "#0EA5E9" }; // sky
+      return { icon: "person-add-outline", tint: "#0EA5E9" };
     default:
-      return { icon: "notifications-outline", tint: "#6B7280" }; // gray
+      return { icon: "notifications-outline", tint: "#6B7280" };
   }
 };
 
-/* ---------- status chip (accepted / rejected / pending / info) ---------- */
+/* ---------- status chip ---------- */
 const statusStyle = (action) => {
   switch (action) {
     case "accepted":
@@ -66,7 +66,7 @@ const statusStyle = (action) => {
         bg: "bg-amber-100",
         txt: "text-amber-700",
         tint: "#B45309",
-        icon: "time",
+        icon: "time-outline",
         label: "Pending",
       };
     default:
@@ -158,7 +158,7 @@ const mapNotification = (n) => {
   const notifType = dt?.type || "notification";
   const title = dt?.title || "Notification";
   const subtitle = dt?.body || "";
-  const action = deriveAction(dt?.title, dt?.body); // accepted | rejected | pending | info
+  const action = deriveAction(dt?.title, dt?.body);
   const at = n?.created_at;
   const read = !!n?.read_at;
 
@@ -179,9 +179,11 @@ export default function RecentActivity({ onItemPress }) {
   const { user } = useAuth();
   const dispatch = useDispatch();
 
-  const { items: notifications = [], loading } = useSelector(
-    (state) => state?.notifications || {}
-  );
+  const notifSlice = useSelector((state) => state?.notifications);
+  const notifications = Array.isArray(notifSlice?.items)
+    ? notifSlice.items
+    : [];
+  const loading = notifSlice?.loading; //  true/false/undefined
 
   useEffect(() => {
     if (user?.id) {
@@ -189,14 +191,18 @@ export default function RecentActivity({ onItemPress }) {
     }
   }, [dispatch, user?.id]);
 
-  // map & sort newest first
   const data = useMemo(() => {
-    const arr = Array.isArray(notifications) ? notifications : [];
-    return arr
+    return notifications
       .map(mapNotification)
-      .slice(0, 4)
-      .sort((a, b) => new Date(b.at) - new Date(a.at));
+      .sort((a, b) => new Date(b.at) - new Date(a.at))
+      .slice(0, 4);
   }, [notifications]);
+
+  // Showing skeleton if:
+  //  - store says loading === true, OR
+  //  - loading is still undefined (slice not hydrated yet) AND we don't have data yet
+  const showSkeleton =
+    (loading === true || loading === undefined) && data.length === 0;
 
   return (
     <View className="px-0">
@@ -209,7 +215,8 @@ export default function RecentActivity({ onItemPress }) {
             Event updates and connection requests
           </Text>
         </View>
-        {loading ? (
+
+        {showSkeleton ? (
           <View className="px-0">
             {[0, 1, 2, 3].map((i) => (
               <ActivityItemSkeleton key={i} isLast={i === 3} />
