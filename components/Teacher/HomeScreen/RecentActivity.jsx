@@ -1,8 +1,11 @@
-import React from "react";
+import { useEffect, useMemo } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import useAuth from "../../../hooks/useAuth";
+import { useDispatch, useSelector } from "react-redux";
+import ActivityItemSkeleton from "./ActivityItemSkeleton";
 
-/* ---------- tiny utils ---------- */
+/* ---------- time ago ---------- */
 const timeAgo = (d) => {
   const t = typeof d === "string" ? new Date(d) : d;
   const diff = Math.max(0, Date.now() - t.getTime());
@@ -17,6 +20,29 @@ const timeAgo = (d) => {
   return `${w}w ago`;
 };
 
+/* ---------- action (accepted / rejected / pending / info) ---------- */
+const deriveAction = (title = "", body = "") => {
+  const s = `${title} ${body}`.toLowerCase();
+  if (/\baccept(ed|s|ance)?\b|approved|confirmed/.test(s)) return "accepted";
+  if (/\breject(ed|s|ion)?\b|declined|canceled|cancelled|denied/.test(s))
+    return "rejected";
+  if (/\bpending\b|awaiting/.test(s)) return "pending";
+  return "info";
+};
+
+/* ---------- left icon by notification type ---------- */
+const typeStyle = (notifType) => {
+  switch (notifType) {
+    case "tuition_event":
+      return { icon: "calendar-outline", tint: "#4F46E5" }; // indigo
+    case "connection_request":
+      return { icon: "person-add-outline", tint: "#0EA5E9" }; // sky
+    default:
+      return { icon: "notifications-outline", tint: "#6B7280" }; // gray
+  }
+};
+
+/* ---------- status chip (accepted / rejected / pending / info) ---------- */
 const statusStyle = (action) => {
   switch (action) {
     case "accepted":
@@ -25,6 +51,7 @@ const statusStyle = (action) => {
         txt: "text-emerald-700",
         tint: "#059669",
         icon: "checkmark-circle",
+        label: "Accepted",
       };
     case "rejected":
       return {
@@ -32,73 +59,47 @@ const statusStyle = (action) => {
         txt: "text-rose-700",
         tint: "#BE123C",
         icon: "close-circle",
+        label: "Rejected",
       };
-    default:
+    case "pending":
       return {
         bg: "bg-amber-100",
         txt: "text-amber-700",
         tint: "#B45309",
         icon: "time",
+        label: "Pending",
+      };
+    default:
+      return {
+        bg: "bg-blue-100",
+        txt: "text-blue-700",
+        tint: "#2563EB",
+        icon: "information-circle",
+        label: "Info",
       };
   }
 };
 
-const typeStyle = (type) => {
-  // leading icon bubble (left side)
-  if (type === "event") {
-    return { icon: "calendar-outline", tint: "#4F46E5" }; // indigo
-  }
-  return { icon: "person-add-outline", tint: "#0EA5E9" }; // sky
-};
-
-const buildCopy = (item) => {
-  if (item.type === "event") {
-    return {
-      title:
-        item.action === "accepted"
-          ? "Tuition event accepted"
-          : item.action === "rejected"
-            ? "Tuition event rejected"
-            : "Tuition event pending",
-      subtitle: item.studentName
-        ? `${item.studentName}${item.note ? " • " + item.note : ""}`
-        : item.note || "",
-    };
-  }
-  // connection
-  return {
-    title:
-      item.action === "accepted"
-        ? "Connection request accepted"
-        : item.action === "rejected"
-          ? "Connection request rejected"
-          : "Connection request pending",
-    subtitle: item.studentName ? item.studentName : item.note || "",
-  };
-};
-
-/* ---------- subcomponents ---------- */
 function StatusChip({ action }) {
   const s = statusStyle(action);
   return (
     <View className={`px-2 py-0.5 rounded-full flex-row items-center ${s.bg}`}>
       <Ionicons name={s.icon} size={14} color={s.tint} />
       <Text className={`ml-1 text-[11px] font-semibold ${s.txt}`}>
-        {action.charAt(0).toUpperCase() + action.slice(1)}
+        {s.label}
       </Text>
     </View>
   );
 }
 
 function ActivityItem({ item, isLast, onPress }) {
-  const ts = typeStyle(item.type);
-  const { title, subtitle } = buildCopy(item);
+  const ts = typeStyle(item.notifType);
   const when = item.at ? timeAgo(item.at) : "";
 
   return (
     <TouchableOpacity
       activeOpacity={0.8}
-      onPress={() => onPress?.(item)}
+      onPress={() => onPress?.(item.original)}
       className={`px-4 py-3 ${isLast ? "" : "border-b border-gray-100"}`}
     >
       <View className="flex-row items-start">
@@ -113,12 +114,17 @@ function ActivityItem({ item, isLast, onPress }) {
         {/* text area */}
         <View className="flex-1">
           <View className="flex-row items-center justify-between">
-            <Text
-              className="text-[14px] font-semibold text-gray-900"
-              numberOfLines={1}
-            >
-              {title}
-            </Text>
+            <View className="flex-row items-center">
+              <Text
+                className="text-[14px] font-semibold text-gray-900"
+                numberOfLines={1}
+              >
+                {item.title}
+              </Text>
+              {!item.read && (
+                <View className="ml-2 w-2 h-2 rounded-full bg-indigo-500" />
+              )}
+            </View>
             {!!when && (
               <Text
                 className="text-[11px] text-gray-500 ml-2"
@@ -129,17 +135,17 @@ function ActivityItem({ item, isLast, onPress }) {
             )}
           </View>
 
-          {!!subtitle && (
+          {!!item.subtitle && (
             <Text
               className="text-[12px] text-gray-600 mt-0.5"
               numberOfLines={2}
             >
-              {subtitle}
+              {item.subtitle}
             </Text>
           )}
 
           <View className="mt-2 mr-auto">
-            <StatusChip action={item.action || "pending"} />
+            <StatusChip action={item.action} />
           </View>
         </View>
       </View>
@@ -147,49 +153,53 @@ function ActivityItem({ item, isLast, onPress }) {
   );
 }
 
-/* ---------- main component ---------- */
-export default function RecentActivity({ activities, onItemPress }) {
-  // sample data if none passed
-  const data =
-    activities && activities.length
-      ? activities
-      : [
-          {
-            id: "1",
-            type: "event", // "event" | "connection"
-            action: "accepted", // "accepted" | "rejected" | "pending"
-            studentName: "Sarah Johnson",
-            note: "Monthly Math — 7:30 PM",
-            at: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15m ago
-          },
-          {
-            id: "2",
-            type: "connection",
-            action: "rejected",
-            studentName: "Arafat Khan",
-            note: "Reason: unavailable schedule",
-            at: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(), // 3h ago
-          },
-          {
-            id: "3",
-            type: "event",
-            action: "pending",
-            studentName: "Nusrat Rahman",
-            note: "Chemistry Trial Class",
-            at: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(), // 26h ago
-          },
-          {
-            id: "4",
-            type: "connection",
-            action: "accepted",
-            studentName: "Khalid Hasan",
-            at: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(), // 2d ago
-          },
-        ];
+const mapNotification = (n) => {
+  const dt = n?.data || {};
+  const notifType = dt?.type || "notification";
+  const title = dt?.title || "Notification";
+  const subtitle = dt?.body || "";
+  const action = deriveAction(dt?.title, dt?.body); // accepted | rejected | pending | info
+  const at = n?.created_at;
+  const read = !!n?.read_at;
+
+  return {
+    id: n?.id || String(Math.random()),
+    notifType,
+    title,
+    subtitle,
+    action,
+    at,
+    read,
+    original: n,
+  };
+};
+
+/* =================== MAIN COMPONENT =================== */
+export default function RecentActivity({ onItemPress }) {
+  const { user } = useAuth();
+  const dispatch = useDispatch();
+
+  const { items: notifications = [], loading } = useSelector(
+    (state) => state?.notifications || {}
+  );
+
+  useEffect(() => {
+    if (user?.id) {
+      dispatch({ type: "FETCH_NOTIFICATIONS", payload: { id: user.id } });
+    }
+  }, [dispatch, user?.id]);
+
+  // map & sort newest first
+  const data = useMemo(() => {
+    const arr = Array.isArray(notifications) ? notifications : [];
+    return arr
+      .map(mapNotification)
+      .slice(0, 4)
+      .sort((a, b) => new Date(b.at) - new Date(a.at));
+  }, [notifications]);
 
   return (
     <View className="px-0">
-      {/* Card container */}
       <View className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <View className="px-4 pt-4 pb-2">
           <Text className="text-[15px] font-bold text-gray-900">
@@ -199,16 +209,28 @@ export default function RecentActivity({ activities, onItemPress }) {
             Event updates and connection requests
           </Text>
         </View>
-
-        {/* list */}
-        {data.map((item, idx) => (
-          <ActivityItem
-            key={item.id ?? String(idx)}
-            item={item}
-            isLast={idx === data.length - 1}
-            onPress={onItemPress}
-          />
-        ))}
+        {loading ? (
+          <View className="px-0">
+            {[0, 1, 2, 3].map((i) => (
+              <ActivityItemSkeleton key={i} isLast={i === 3} />
+            ))}
+          </View>
+        ) : data.length === 0 ? (
+          <View className="px-4 py-6">
+            <Text className="text-[12px] text-gray-500">
+              No recent activity
+            </Text>
+          </View>
+        ) : (
+          data.map((item, idx) => (
+            <ActivityItem
+              key={item.id}
+              item={item}
+              isLast={idx === data.length - 1}
+              onPress={onItemPress}
+            />
+          ))
+        )}
       </View>
     </View>
   );
