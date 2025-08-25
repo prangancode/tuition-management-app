@@ -31,6 +31,8 @@ const deriveAction = (title = "", body = "") => {
 };
 
 /* ---------- left icon by notification type ---------- */
+
+// in future we need to add here more types if there are any
 const typeStyle = (notifType) => {
   switch (notifType) {
     case "tuition_event":
