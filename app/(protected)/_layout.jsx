@@ -20,6 +20,10 @@ export default function AppLayout() {
         options={{ headerShown: false }}
       />
       <Stack.Screen name="studentDetails" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="editStudentDetails"
+        options={{ headerShown: false }}
+      />
       <Stack.Screen name="calender" options={{ headerShown: false }} />
     </Stack>
   );

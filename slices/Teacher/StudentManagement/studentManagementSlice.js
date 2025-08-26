@@ -7,6 +7,10 @@ const initialState = {
   error: null,
 
   connectionCount: null,
+
+  tuitionDetails: null,
+  tuitionDetailsLoading: false,
+  tuitionDetailsError: null,
 };
 
 const studentManagementSlice = createSlice({
@@ -49,6 +53,26 @@ const studentManagementSlice = createSlice({
     countConnectionsSuccess: (state, { payload }) => {
       state.connectionCount = payload;
     },
+
+    // Tuition details actions
+
+    fetchTuitionDetailsStart: (state) => {
+      state.tuitionDetailsLoading = true;
+      state.tuitionDetailsError = null;
+    },
+    fetchTuitionDetailsSuccess: (state, { payload }) => {
+      state.tuitionDetailsLoading = false;
+      state.tuitionDetails = payload; // the tuition details object
+    },
+    fetchTuitionDetailsFailure: (state, { payload }) => {
+      state.tuitionDetailsLoading = false;
+      state.tuitionDetailsError = payload;
+    },
+    clearTuitionDetails: (state) => {
+      state.tuitionDetails = null;
+      state.tuitionDetailsError = null;
+      state.tuitionDetailsLoading = false;
+    },
   },
 });
 
@@ -62,6 +86,11 @@ export const {
   disconnectStudentFailure,
 
   countConnectionsSuccess,
+
+  fetchTuitionDetailsStart,
+  fetchTuitionDetailsSuccess,
+  fetchTuitionDetailsFailure,
+  clearTuitionDetails,
 } = studentManagementSlice.actions;
 
 export default studentManagementSlice.reducer;

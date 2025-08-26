@@ -91,8 +91,14 @@ export default function StudentsScreen() {
       params: { conn: encodeURIComponent(JSON.stringify(conn)) },
     });
   };
-  const onEdit = (item) =>
-    Alert.alert("Edit", `Edit ${item?.student?.name || ""}`);
+  const onEdit = (conn) => {
+    console.log("conn", conn?.tuition_details?.id);
+    router.push({
+      pathname: "/editStudentDetails",
+      params: { tuition_details_id: conn?.tuition_details?.id },
+    });
+  };
+
   const onDelete = (item) =>
     Alert.alert("Delete", `Delete ${item?.student?.name || ""}?`);
   const onAddPress = () => Alert.alert("Add", "Add new student");
