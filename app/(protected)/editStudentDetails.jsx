@@ -5,7 +5,6 @@ import {
   ScrollView,
   TextInput,
   Pressable,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
@@ -128,7 +127,8 @@ const SectionCard = ({ title, icon, children, right }) => (
 export default function EditStudentDetails() {
   const router = useRouter();
   const dispatch = useDispatch();
-  const { tuition_details_id } = useLocalSearchParams();
+  const { tuition_details_id, student_name, student_id } =
+    useLocalSearchParams();
 
   // redux state (assuming you added these in your slice)
   const { tuitionDetails, tuitionDetailsLoading, tuitionDetailsSubmitting } =
@@ -319,19 +319,34 @@ export default function EditStudentDetails() {
   };
 
   const HeaderBar = () => (
-    <View className="bg-indigo-600 px-4 pb-5 pt-3 rounded-b-3xl">
-      <View className="flex-row items-center justify-between">
+    <View className="px-4 pt-3 pb-3 bg-white border-b border-gray-100">
+      <View className="flex-row items-center">
         <Pressable
           onPress={() => router.back()}
           hitSlop={8}
-          style={{ padding: 6 }}
+          className="p-2 -ml-2 mr-1"
         >
-          <Ionicons name="chevron-back" size={22} color="#fff" />
+          <Ionicons name="chevron-back" size={22} color="#111827" />
         </Pressable>
-        <Text className="text-white font-bold text-[16px]">
-          Edit Tuition Details
-        </Text>
-        <View style={{ width: 28 }} />
+
+        <View className="ml-1 flex-1">
+          <Text className="text-[11px] text-gray-500">Editing</Text>
+
+          <View className="flex-row items-center flex-wrap">
+            <Ionicons name="person-circle-outline" size={16} color="#6B7280" />
+            <Text
+              className="ml-1 text-[15px] font-semibold text-gray-900"
+              numberOfLines={1}
+            >
+              {student_name}
+            </Text>
+            {student_id ? (
+              <Text className="ml-2 text-[12px] text-gray-500">
+                #{String(student_id)}
+              </Text>
+            ) : null}
+          </View>
+        </View>
       </View>
     </View>
   );

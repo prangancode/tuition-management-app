@@ -95,7 +95,11 @@ export default function StudentsScreen() {
     console.log("conn", conn?.tuition_details?.id);
     router.push({
       pathname: "/editStudentDetails",
-      params: { tuition_details_id: conn?.tuition_details?.id },
+      params: {
+        tuition_details_id: conn?.tuition_details?.id,
+        student_name: conn?.student?.name,
+        student_id: conn?.student?.custom_id,
+      },
     });
   };
 

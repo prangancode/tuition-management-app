@@ -18,14 +18,14 @@ export default function EditTuitionDetailsSkeleton({ variant = "both" }) {
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       {/* Header */}
-      <View className="bg-indigo-600 px-4 pt-3 pb-5 rounded-b-3xl">
+      {/* <View className="bg-indigo-600 px-4 pt-3 pb-5 rounded-b-3xl">
         <View className="flex-row items-center justify-between">
           <Skeleton className="w-7 h-7 rounded-full" />
           <Skeleton className="h-4 w-40 rounded-md" />
           <Skeleton className="w-7 h-7 rounded-full" />
         </View>
         <Skeleton className="h-3 w-56 mt-3 rounded-md" />
-      </View>
+      </View> */}
 
       <ScrollView
         contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
