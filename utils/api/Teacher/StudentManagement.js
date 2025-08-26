@@ -7,4 +7,5 @@ export const STUDENT_MANAGEMENT_API = {
   PENDING_STUDENTS: `${API_BASE_URL}/connection/my-pending-requests`,
   DISCONNECT_STUDENT: (id) => `${API_BASE_URL}/connections/${id}/disconnect`,
   GET_TUITION_DETAILS: (id) => `${API_BASE_URL}/tuition-details/${id}`,
+  UPDATE_TUITION_DETAILS: (id) => `${API_BASE_URL}/tuition-details/${id}`,
 };

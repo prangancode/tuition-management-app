@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Ionicons, Feather } from "@expo/vector-icons";
 
 import { clearTuitionDetails } from "../../slices/Teacher/StudentManagement/studentManagementSlice";
+import { notify } from "../../helpers/toast";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -78,7 +79,7 @@ const Segmented = ({ value, onChange }) => {
   return (
     <View className="flex-row gap-2">
       <Item v="monthly_based" icon="calendar-outline" label="Monthly-based" />
-      <Item v="course_based" icon="book-outline" label="Course-based" />
+      <Item v="course" icon="book-outline" label="Course-based" />
     </View>
   );
 };
@@ -128,11 +129,13 @@ export default function EditStudentDetails() {
   const dispatch = useDispatch();
   const { tuition_details_id } = useLocalSearchParams();
 
-  console.log("tuition_details_id", tuition_details_id);
-
   // redux state (assuming you added these in your slice)
-  const { tuitionDetails, tuitionDetailsLoading, tuitionDetailsError } =
-    useSelector((s) => s.studentManagement);
+  const {
+    tuitionDetails,
+    tuitionDetailsLoading,
+    tuitionDetailsError,
+    tuitionDetailsSubmitting,
+  } = useSelector((s) => s.studentManagement);
 
   // local form state
   const [teacherId, setTeacherId] = useState(null);
@@ -256,8 +259,8 @@ export default function EditStudentDetails() {
     if (tuitionType === "monthly_based") {
       if (!daysSelected.length) return "Select at least one day.";
       if (!salaryPerMonth) return "Monthly salary is required.";
-      if (startingMonth && !/^\d{4}-\d{2}$/.test(startingMonth))
-        return "Starting month must be YYYY-MM.";
+      //   if (startingMonth && !/^\d{4}-\d{2}$/.test(startingMonth))
+      //     return "Starting month must be YYYY-MM.";
     } else {
       if (!classesPerCourse) return "Total classes per course is required.";
       if (!hoursPerClass) return "Hours per class is required.";
@@ -268,61 +271,54 @@ export default function EditStudentDetails() {
     return null;
   };
 
-  const onSave = async () => {
-    // const err = validate();
-    // if (err) {
-    //   notify?.error?.("Validation", err);
-    //   return;
-    // }
-    // const base = {
-    //   tuition_type: tuitionType,
-    //   class_level: classLevel,
-    //   subject_list: subjects,
-    //   medium,
-    //   institute_name: institute,
-    //   address_line: address,
-    //   district,
-    //   thana,
-    //   study_purpose: purpose,
-    // };
-    // const monthly =
-    //   tuitionType === "monthly_based"
-    //     ? {
-    //         tuition_days_per_week: numberOrNull(daysPerWeek),
-    //         hours_per_day: numberOrNull(hoursPerDay),
-    //         days_name: daysSelected,
-    //         salary_per_month: numberOrNull(salaryPerMonth),
-    //         starting_month: startingMonth || null,
-    //       }
-    //     : {};
-    // const course =
-    //   tuitionType === "course_based"
-    //     ? {
-    //         total_classes_per_course: numberOrNull(classesPerCourse),
-    //         hours_per_class: numberOrNull(hoursPerClass),
-    //         salary_per_subject: numberOrNull(salaryPerSubject),
-    //         total_course_completion_salary: numberOrNull(totalCourseSalary),
-    //         duration: duration || null,
-    //       }
-    //     : {};
-    // const payload = { ...base, ...monthly, ...course };
-    // try {
-    //   // PATCH same endpoint
-    //   const res = await fetcher(
-    //     STUDENT_MANAGEMENT_API.GET_TUITION_DETAILS(id),
-    //     {
-    //       method: "PATCH",
-    //       body: JSON.stringify(payload),
-    //     }
-    //   );
-    //   notify?.success?.("Tuition details", res?.message || "Updated");
-    //   router.back();
-    // } catch (e) {
-    //   notify?.error?.(
-    //     "Tuition details",
-    //     e?.message || "Failed to update details."
-    //   );
-    // }
+  const onSave = () => {
+    const err = validate();
+    if (err) {
+      notify?.error?.("Validation", err);
+      return;
+    }
+
+    const base = {
+      tuition_type: tuitionType,
+      class_level: classLevel,
+      subject_list: subjects,
+      medium,
+      institute_name: institute,
+      address_line: address,
+      district,
+      thana,
+      study_purpose: purpose,
+    };
+
+    const monthly =
+      tuitionType === "monthly_based"
+        ? {
+            tuition_days_per_week: numberOrNull(daysPerWeek),
+            hours_per_day: numberOrNull(hoursPerDay),
+            days_name: daysSelected,
+            salary_per_month: numberOrNull(salaryPerMonth),
+            starting_month: startingMonth || null,
+          }
+        : {};
+
+    const course =
+      tuitionType === "course"
+        ? {
+            total_classes_per_course: numberOrNull(classesPerCourse),
+            hours_per_class: numberOrNull(hoursPerClass),
+            salary_per_subject: numberOrNull(salaryPerSubject),
+            total_course_completion_salary: numberOrNull(totalCourseSalary),
+            duration: duration || null,
+          }
+        : {};
+
+    const payload = { ...base, ...monthly, ...course };
+
+    // handing off to saga
+    dispatch({
+      type: "UPDATE_TUITION_DETAILS",
+      payload: { id: tuition_details_id, data: payload },
+    });
   };
 
   const HeaderBar = () => (
@@ -577,7 +573,7 @@ export default function EditStudentDetails() {
           )}
 
           {/* Course-based */}
-          {tuitionType === "course_based" && (
+          {tuitionType === "course" && (
             <SectionCard title="Course Plan" icon="book-outline">
               <View className="flex-row gap-3">
                 <View className="flex-1">
@@ -647,11 +643,17 @@ export default function EditStudentDetails() {
             </Pressable>
             <Pressable
               onPress={onSave}
-              className="flex-1 h-12 rounded-xl bg-indigo-600 items-center justify-center flex-row gap-2"
+              disabled={tuitionDetailsSubmitting}
+              className="flex-1 h-12 rounded-xl bg-indigo-600 items-center justify-center flex-row gap-2 disabled:bg-gray-500 disabled:cursor-not-allowed"
               style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
             >
               <Feather name="save" size={18} color="#fff" />
-              <Text className="text-white font-semibold">Save changes</Text>
+              <Text className="text-white font-semibold">
+                {" "}
+                {tuitionDetailsSubmitting
+                  ? "Saving changes.."
+                  : "Save changes"}{" "}
+              </Text>
             </Pressable>
           </View>
         </View>

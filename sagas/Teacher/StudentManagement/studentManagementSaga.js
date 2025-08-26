@@ -10,6 +10,9 @@ import {
   fetchTuitionDetailsStart,
   fetchTuitionDetailsSuccess,
   fetchTuitionDetailsFailure,
+  updateTuitionDetailsStart,
+  updateTuitionDetailsSuccess,
+  updateTuitionDetailsFailure,
 } from "../../../slices/Teacher/StudentManagement/studentManagementSlice";
 
 import { STUDENT_MANAGEMENT_API } from "../../../utils/api";
@@ -88,7 +91,7 @@ function* fetchTuitionDetailsSaga(action) {
 
     console.log("id", id);
     if (!id && id !== 0) {
-      throw new Error("Missing tuition details id.");
+      notify.error("Tuition details", "Missing tuition details id.");
     }
 
     const response = yield call(() =>
@@ -97,19 +100,48 @@ function* fetchTuitionDetailsSaga(action) {
       })
     );
 
-    // Keep it consistent with your fetcher + ApiResponseService shape
-    // If ApiResponseService returns { data: { tuition_details: {...} }, message }, many fetchers unwrap.
     const details =
       response?.data?.tuition_details != null
         ? response.data.tuition_details
         : response?.data;
 
     yield put(fetchTuitionDetailsSuccess(details));
-    // optional toast:
-    // notify.success("Tuition details", "Fetched successfully");
   } catch (error) {
     const message = error?.message || "Failed to fetch tuition details.";
     yield put(fetchTuitionDetailsFailure(message));
+    notify.error("Tuition details", message);
+  }
+}
+
+// update tuition details saga
+function* updateTuitionDetailsSaga(action) {
+  try {
+    yield put(updateTuitionDetailsStart());
+
+    const { id, data } = action.payload || {};
+
+    // console.log("id", id);
+    // console.log("data", data);
+
+    if (!id && id !== 0) {
+      notify.error("Tuition details", "Missing tuition details id.");
+    }
+
+    const response = yield call(() =>
+      fetcher(STUDENT_MANAGEMENT_API.UPDATE_TUITION_DETAILS(id), {
+        method: "PATCH",
+        body: data,
+      })
+    );
+
+    yield put(updateTuitionDetailsSuccess());
+    notify.success(
+      "Tuition details",
+      response?.message || "Updated successfully."
+    );
+  } catch (error) {
+    const message = error?.message || "Failed to update tuition details.";
+    yield put(updateTuitionDetailsFailure(message));
     notify.error("Tuition details", message);
   }
 }
@@ -120,4 +152,5 @@ export default function* studentManagementSaga() {
   yield takeLatest("DISCONNECT_STUDENT", disconnectStudentSaga);
   yield takeLatest("CONNECTION_COUNT", countConnectionsSaga);
   yield takeLatest("GET_TUITION_DETAILS", fetchTuitionDetailsSaga);
+  yield takeLatest("UPDATE_TUITION_DETAILS", updateTuitionDetailsSaga);
 }

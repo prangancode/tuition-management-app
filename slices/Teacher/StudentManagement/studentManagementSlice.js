@@ -11,6 +11,8 @@ const initialState = {
   tuitionDetails: null,
   tuitionDetailsLoading: false,
   tuitionDetailsError: null,
+
+  tuitionDetailsSubmitting: false,
 };
 
 const studentManagementSlice = createSlice({
@@ -73,6 +75,22 @@ const studentManagementSlice = createSlice({
       state.tuitionDetailsError = null;
       state.tuitionDetailsLoading = false;
     },
+
+    // Update tuition details actions
+
+    updateTuitionDetailsStart: (state) => {
+      state.tuitionDetailsSubmitting = true;
+      state.tuitionDetailsError = null;
+    },
+
+    updateTuitionDetailsSuccess: (state) => {
+      state.tuitionDetailsSubmitting = false;
+      state.tuitionDetailsError = null;
+    },
+    updateTuitionDetailsFailure: (state, { payload }) => {
+      state.tuitionDetailsSubmitting = false;
+      state.tuitionDetailsError = payload;
+    },
   },
 });
 
@@ -91,6 +109,10 @@ export const {
   fetchTuitionDetailsSuccess,
   fetchTuitionDetailsFailure,
   clearTuitionDetails,
+
+  updateTuitionDetailsStart,
+  updateTuitionDetailsSuccess,
+  updateTuitionDetailsFailure,
 } = studentManagementSlice.actions;
 
 export default studentManagementSlice.reducer;
