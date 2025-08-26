@@ -16,6 +16,7 @@ import { Ionicons, Feather } from "@expo/vector-icons";
 
 import { clearTuitionDetails } from "../../slices/Teacher/StudentManagement/studentManagementSlice";
 import { notify } from "../../helpers/toast";
+import EditTuitionDetailsSkeleton from "../../components/Teacher/Students/EditTuitionDetailsSkeleton";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -130,12 +131,8 @@ export default function EditStudentDetails() {
   const { tuition_details_id } = useLocalSearchParams();
 
   // redux state (assuming you added these in your slice)
-  const {
-    tuitionDetails,
-    tuitionDetailsLoading,
-    tuitionDetailsError,
-    tuitionDetailsSubmitting,
-  } = useSelector((s) => s.studentManagement);
+  const { tuitionDetails, tuitionDetailsLoading, tuitionDetailsSubmitting } =
+    useSelector((s) => s.studentManagement);
 
   // local form state
   const [teacherId, setTeacherId] = useState(null);
@@ -336,42 +333,11 @@ export default function EditStudentDetails() {
         </Text>
         <View style={{ width: 28 }} />
       </View>
-      <Text className="text-indigo-100 mt-2 text-[12px]">
-        ID: {tuition_details_id} • Student #{studentId ?? "—"} • Teacher #
-        {teacherId ?? "—"}
-      </Text>
     </View>
   );
 
   if (tuitionDetailsLoading) {
-    return (
-      <SafeAreaView className="flex-1 bg-white items-center justify-center">
-        <ActivityIndicator size="large" />
-        <Text className="text-gray-600 mt-2">Loading tuition details…</Text>
-      </SafeAreaView>
-    );
-  }
-
-  if (tuitionDetailsError) {
-    return (
-      <SafeAreaView className="flex-1 bg-white items-center justify-center px-6">
-        <Ionicons name="alert-circle" size={28} color="#DC2626" />
-        <Text className="text-red-600 mt-2 text-center">
-          {tuitionDetailsError}
-        </Text>
-        <Pressable
-          onPress={() =>
-            dispatch({
-              type: "GET_TUITION_DETAILS",
-              payload: { id: tuition_details_id },
-            })
-          }
-          className="mt-4 bg-indigo-600 rounded-xl px-4 py-2"
-        >
-          <Text className="text-white font-semibold text-[13px]">Retry</Text>
-        </Pressable>
-      </SafeAreaView>
-    );
+    return <EditTuitionDetailsSkeleton variant="both" />;
   }
 
   return (
