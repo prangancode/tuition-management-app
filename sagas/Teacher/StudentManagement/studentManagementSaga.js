@@ -139,6 +139,12 @@ function* updateTuitionDetailsSaga(action) {
       "Tuition details",
       response?.message || "Updated successfully."
     );
+
+    // call fetchConnectionRequestsSaga
+    yield put({
+      type: "FETCH_CONNECTION_REQUESTS",
+      payload: { filters: { per_page: 10, page: 1 } },
+    });
   } catch (error) {
     const message = error?.message || "Failed to update tuition details.";
     yield put(updateTuitionDetailsFailure(message));

@@ -1,5 +1,5 @@
 // Header.js
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { useDispatch } from "react-redux";
@@ -41,9 +41,9 @@ export default function Header() {
           <View className="mr-3">
             <InitialsAvatar
               name={displayName}
-              size={48} // inner circle (was w-12 h-12)
-              showGlow // adds outer soft glow
-              glowPadding={4} // makes total ~56px (matches your old w-14)
+              size={48}
+              showGlow
+              glowPadding={4}
               glowBgClass="bg-white/15"
             />
           </View>

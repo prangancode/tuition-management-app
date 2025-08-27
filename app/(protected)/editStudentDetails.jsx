@@ -373,19 +373,19 @@ export default function EditStudentDetails() {
               value={tuitionType}
               onChange={(v) => {
                 setTuitionType(v);
-                if (v === "monthly_based") {
-                  setClassesPerCourse("");
-                  setHoursPerClass("");
-                  setSalaryPerSubject("");
-                  setTotalCourseSalary("");
-                  setDuration("");
-                } else {
-                  setDaysSelected([]);
-                  setDaysPerWeek("");
-                  setHoursPerDay("");
-                  setSalaryPerMonth("");
-                  setStartingMonth("");
-                }
+                // if (v === "monthly_based") {
+                //   setClassesPerCourse("");
+                //   setHoursPerClass("");
+                //   setSalaryPerSubject("");
+                //   setTotalCourseSalary("");
+                //   setDuration("");
+                // } else {
+                //   setDaysSelected([]);
+                //   setDaysPerWeek("");
+                //   setHoursPerDay("");
+                //   setSalaryPerMonth("");
+                //   setStartingMonth("");
+                // }
               }}
             />
           </SectionCard>

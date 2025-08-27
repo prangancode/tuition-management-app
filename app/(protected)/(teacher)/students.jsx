@@ -88,7 +88,10 @@ export default function StudentsScreen() {
   const onView = (conn) => {
     router.push({
       pathname: "/studentDetails",
-      params: { conn: encodeURIComponent(JSON.stringify(conn)) },
+      params: {
+        conn: encodeURIComponent(JSON.stringify(conn)),
+        student_id: conn?.student?.id,
+      },
     });
   };
   const onEdit = (conn) => {
