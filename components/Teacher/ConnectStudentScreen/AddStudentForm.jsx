@@ -35,7 +35,7 @@ const AddStudentForm = ({ studentDigits, setStudentDigits }) => {
 
   const handleConnect = () => {
     if (!isValid || loading) return;
-    console.log("display", display);
+    // console.log("display", display);
 
     dispatch({ type: "FIND_STUDENT", payload: { custom_id: display } });
   };

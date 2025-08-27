@@ -96,7 +96,7 @@ export default function StudentsScreen() {
     });
   };
   const onEdit = (conn) => {
-    console.log("conn", conn?.tuition_details?.id);
+    // console.log("conn", conn?.tuition_details?.id);
     router.push({
       pathname: "/editStudentDetails",
       params: {

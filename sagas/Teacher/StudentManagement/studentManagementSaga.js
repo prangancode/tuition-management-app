@@ -92,7 +92,7 @@ function* fetchTuitionDetailsSaga(action) {
 
     const id = action?.payload?.id;
 
-    console.log("id", id);
+    // console.log("id", id);
     if (!id && id !== 0) {
       notify.error("Tuition details", "Missing tuition details id.");
     }
@@ -121,7 +121,7 @@ function* updateTuitionDetailsSaga(action) {
   try {
     yield put(updateTuitionDetailsStart());
 
-    const { id, data } = action.payload || {};
+    const { id, data, navigate } = action.payload || {};
 
     // console.log("id", id);
     // console.log("data", data);
@@ -142,6 +142,11 @@ function* updateTuitionDetailsSaga(action) {
       "Tuition details",
       response?.message || "Updated successfully."
     );
+
+    if (navigate) {
+      const dest = "/students";
+      yield call(navigate, dest);
+    }
   } catch (error) {
     const message = error?.message || "Failed to update tuition details.";
     yield put(updateTuitionDetailsFailure(message));

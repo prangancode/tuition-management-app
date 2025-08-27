@@ -116,7 +116,7 @@ export default function TuitionDetailsForm() {
           }),
     };
 
-    console.log("LOCAL_SAVE_PREVIEW", payload);
+    // console.log("LOCAL_SAVE_PREVIEW", payload);
     dispatch({
       type: "SUBMIT_TUITION_DETAILS",
       payload: {

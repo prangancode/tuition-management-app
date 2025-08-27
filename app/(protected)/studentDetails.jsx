@@ -162,6 +162,7 @@ export default function StudentDetails() {
   const { allDetails, allDetailsLoading } = useSelector(
     (s) => s.studentManagement
   );
+
   const dispatch = useDispatch();
   const { student_id, teacher_id } = useLocalSearchParams();
 
@@ -178,7 +179,7 @@ export default function StudentDetails() {
   const displayStatus =
     allDetails?.status === "pending"
       ? "pending"
-      : allDetails?.is_active
+      : allDetails?.student?.is_active
         ? "active"
         : "archived";
 

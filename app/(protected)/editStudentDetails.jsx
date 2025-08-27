@@ -314,7 +314,11 @@ export default function EditStudentDetails() {
     // handing off to saga
     dispatch({
       type: "UPDATE_TUITION_DETAILS",
-      payload: { id: tuition_details_id, data: payload },
+      payload: {
+        id: tuition_details_id,
+        data: payload,
+        navigate: (path) => router.replace(path),
+      },
     });
   };
 
