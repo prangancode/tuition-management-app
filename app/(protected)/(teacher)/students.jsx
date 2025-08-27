@@ -89,8 +89,9 @@ export default function StudentsScreen() {
     router.push({
       pathname: "/studentDetails",
       params: {
-        conn: encodeURIComponent(JSON.stringify(conn)),
-        student_id: conn?.student?.id,
+        // conn: encodeURIComponent(JSON.stringify(conn)),
+        student_id: conn?.student_id,
+        teacher_id: conn?.teacher_id,
       },
     });
   };

@@ -13,6 +13,11 @@ const initialState = {
   tuitionDetailsError: null,
 
   tuitionDetailsSubmitting: false,
+
+  // get all details
+  allDetails: null,
+  allDetailsLoading: false,
+  allDetailsError: null,
 };
 
 const studentManagementSlice = createSlice({
@@ -91,6 +96,20 @@ const studentManagementSlice = createSlice({
       state.tuitionDetailsSubmitting = false;
       state.tuitionDetailsError = payload;
     },
+
+    // get all details
+    fetchAllDetailsStart: (state) => {
+      state.allDetailsLoading = true;
+      state.allDetailsError = null;
+    },
+    fetchAllDetailsSuccess: (state, { payload }) => {
+      state.allDetailsLoading = false;
+      state.allDetails = payload; // the all details object
+    },
+    fetchAllDetailsFailure: (state, { payload }) => {
+      state.allDetailsLoading = false;
+      state.allDetailsError = payload;
+    },
   },
 });
 
@@ -113,6 +132,11 @@ export const {
   updateTuitionDetailsStart,
   updateTuitionDetailsSuccess,
   updateTuitionDetailsFailure,
+
+  // get all details
+  fetchAllDetailsStart,
+  fetchAllDetailsSuccess,
+  fetchAllDetailsFailure,
 } = studentManagementSlice.actions;
 
 export default studentManagementSlice.reducer;

@@ -13,6 +13,9 @@ import {
   updateTuitionDetailsStart,
   updateTuitionDetailsSuccess,
   updateTuitionDetailsFailure,
+  fetchAllDetailsStart,
+  fetchAllDetailsSuccess,
+  fetchAllDetailsFailure,
 } from "../../../slices/Teacher/StudentManagement/studentManagementSlice";
 
 import { STUDENT_MANAGEMENT_API } from "../../../utils/api";
@@ -139,16 +142,38 @@ function* updateTuitionDetailsSaga(action) {
       "Tuition details",
       response?.message || "Updated successfully."
     );
-
-    // call fetchConnectionRequestsSaga
-    yield put({
-      type: "FETCH_CONNECTION_REQUESTS",
-      payload: { filters: { per_page: 10, page: 1 } },
-    });
   } catch (error) {
     const message = error?.message || "Failed to update tuition details.";
     yield put(updateTuitionDetailsFailure(message));
     notify.error("Tuition details", message);
+  }
+}
+
+// get alll details saga
+
+function* fetchAllDetailsSaga(action) {
+  try {
+    yield put(fetchAllDetailsStart());
+
+    const teacherId = action?.payload?.teacherId;
+    const studentId = action?.payload?.studentId;
+
+    const response = yield call(() =>
+      fetcher(STUDENT_MANAGEMENT_API.GET_ALL_DETAILS_(teacherId, studentId), {
+        method: "GET",
+      })
+    );
+
+    const details =
+      response?.data?.tuition_details != null
+        ? response.data.tuition_details
+        : response?.data;
+
+    yield put(fetchAllDetailsSuccess(details));
+  } catch (error) {
+    const message = error?.message || "Failed to fetch tuition details.";
+    yield put(fetchAllDetailsFailure(message));
+    // notify.error("Tuition details", message);
   }
 }
 
@@ -159,4 +184,5 @@ export default function* studentManagementSaga() {
   yield takeLatest("CONNECTION_COUNT", countConnectionsSaga);
   yield takeLatest("GET_TUITION_DETAILS", fetchTuitionDetailsSaga);
   yield takeLatest("UPDATE_TUITION_DETAILS", updateTuitionDetailsSaga);
+  yield takeLatest("GET_ALL_DETAILS", fetchAllDetailsSaga);
 }

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -6,10 +6,12 @@ import {
   Pressable,
   Linking,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
+import { useDispatch, useSelector } from "react-redux";
 
 /* ---------- helpers ---------- */
 const C = {
@@ -157,24 +159,26 @@ const Stat = ({ label, value, tone = "indigo" }) => {
 
 /* ---------- main component ---------- */
 export default function StudentDetails() {
-  const { conn } = useLocalSearchParams();
+  const { allDetails, allDetailsLoading } = useSelector(
+    (s) => s.studentManagement
+  );
+  const dispatch = useDispatch();
+  const { student_id, teacher_id } = useLocalSearchParams();
 
-  // parse the passed object safely
-  const data = useMemo(() => {
-    try {
-      return conn ? JSON.parse(decodeURIComponent(conn)) : null;
-    } catch (e) {
-      return null;
-    }
-  }, [conn]);
+  useEffect(() => {
+    dispatch({
+      type: "GET_ALL_DETAILS",
+      payload: { studentId: student_id, teacherId: teacher_id },
+    });
+  }, [student_id, teacher_id]);
 
   // derive fields from API shape
-  const student = data?.student || {};
-  const tuition_details = data?.tuition_details || {};
+  const student = allDetails?.student || {};
+  const tuition_details = allDetails || {};
   const displayStatus =
-    data?.status === "pending"
+    allDetails?.status === "pending"
       ? "pending"
-      : data?.is_active
+      : allDetails?.is_active
         ? "active"
         : "archived";
 
@@ -197,6 +201,15 @@ export default function StudentDetails() {
       { text: "Disconnect", style: "destructive", onPress: () => {} },
     ]);
   };
+
+  if (allDetailsLoading) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size="large"></ActivityIndicator>
+        <Text className="text-gray-500 mt-2">Loading...</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -254,7 +267,7 @@ export default function StudentDetails() {
                 Email
               </Text>
             </Pressable>
-            {data?.is_active ? (
+            {allDetails?.is_active ? (
               <Pressable
                 onPress={onDisconnect}
                 className="h-10 px-3 rounded-xl items-center justify-center flex-row gap-1"

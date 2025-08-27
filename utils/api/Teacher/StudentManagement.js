@@ -8,4 +8,6 @@ export const STUDENT_MANAGEMENT_API = {
   DISCONNECT_STUDENT: (id) => `${API_BASE_URL}/connections/${id}/disconnect`,
   GET_TUITION_DETAILS: (id) => `${API_BASE_URL}/tuition-details/${id}`,
   UPDATE_TUITION_DETAILS: (id) => `${API_BASE_URL}/tuition-details/${id}`,
+  GET_ALL_DETAILS_: (teacherId, studentId) =>
+    `${API_BASE_URL}/tuition-details/teacher/${teacherId}/student/${studentId}`,
 };
