@@ -1,10 +1,11 @@
-import React, { memo } from "react";
+import { memo } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
+  Pressable,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -17,6 +18,8 @@ function StudentsHeader({
   loading,
   countsByKey = {},
   onAddPress,
+  onRefresh,
+  refreshing,
 }) {
   return (
     <>
@@ -26,13 +29,35 @@ function StudentsHeader({
           <Text className="text-white text-2xl font-extrabold">
             My Students
           </Text>
-          <TouchableOpacity
-            onPress={onAddPress}
-            className="bg-white/90 px-3 py-2 rounded-xl flex-row items-center"
-          >
-            <Ionicons name="person-add-outline" size={16} color="#111827" />
-            <Text className="ml-1 font-semibold text-gray-900">Add</Text>
-          </TouchableOpacity>
+
+          <View className="flex-row items-center">
+            {/* refresh button */}
+
+            {refreshing ? (
+              <ActivityIndicator size="small" color="#fff" className="mr-2" />
+            ) : (
+              <Pressable
+                onPress={onRefresh}
+                disabled={refreshing}
+                hitSlop={10}
+                className="mr-2 rounded-full border border-white/20 bg-white/10 p-2"
+                accessibilityRole="button"
+                accessibilityLabel="Refresh students"
+                style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
+              >
+                <Ionicons name="refresh" size={18} color="#fff" />
+              </Pressable>
+            )}
+
+            {/* add button */}
+            <TouchableOpacity
+              onPress={onAddPress}
+              className="bg-white/90 px-3 py-2 rounded-xl flex-row items-center"
+            >
+              <Ionicons name="person-add-outline" size={16} color="#111827" />
+              <Text className="ml-1 font-semibold text-gray-900">Add</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Search */}

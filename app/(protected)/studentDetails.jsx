@@ -179,7 +179,7 @@ export default function StudentDetails() {
   const displayStatus =
     allDetails?.status === "pending"
       ? "pending"
-      : allDetails?.student?.is_active
+      : allDetails?.status === "accepted" && allDetails?.is_active
         ? "active"
         : "archived";
 

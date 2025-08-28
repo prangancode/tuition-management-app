@@ -7,7 +7,9 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Pressable,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
 import StudentsHeader from "../../../components/Teacher/Students/StudentsHeader";
@@ -86,6 +88,7 @@ export default function StudentsScreen() {
   };
 
   const onView = (conn) => {
+    console.log("activeTab", activeTab);
     router.push({
       pathname: "/studentDetails",
       params: {
@@ -111,7 +114,6 @@ export default function StudentsScreen() {
     Alert.alert("Delete", `Delete ${item?.student?.name || ""}?`);
   const onAddPress = () => Alert.alert("Add", "Add new student");
 
-  // map server keys → tab keys for badges
   const countByKey = useMemo(
     () => ({
       active: connectionCount?.active_accepted ?? 0,
@@ -120,6 +122,25 @@ export default function StudentsScreen() {
     }),
     [connectionCount]
   );
+
+  const refreshList = () => {
+    // cancelling any pending debounced search
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current);
+      searchTimerRef.current = null;
+    }
+
+    const filters = {
+      ...FILTERS_BY_TAB[activeTab],
+      per_page: 10,
+      page: 1,
+      ...(query.trim() ? { search: query.trim() } : {}),
+    };
+
+    // refresh list
+    dispatch({ type: "FETCH_CONNECTION_REQUESTS", payload: { filters } });
+    dispatch({ type: "CONNECTION_COUNT" });
+  };
 
   const headerEl = useMemo(
     () => (
@@ -132,6 +153,8 @@ export default function StudentsScreen() {
         loading={loading}
         countsByKey={countByKey}
         onAddPress={onAddPress}
+        onRefresh={refreshList}
+        refreshing={loading}
       />
     ),
     [activeTab, query, loading, countByKey]
