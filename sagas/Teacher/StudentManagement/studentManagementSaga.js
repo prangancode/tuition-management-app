@@ -160,18 +160,17 @@ function* fetchAllDetailsSaga(action) {
   try {
     yield put(fetchAllDetailsStart());
 
-    const teacherId = action?.payload?.teacherId;
-    const studentId = action?.payload?.studentId;
+    const connectionId = action?.payload?.connection_id;
 
     const response = yield call(() =>
-      fetcher(STUDENT_MANAGEMENT_API.GET_ALL_DETAILS_(teacherId, studentId), {
+      fetcher(STUDENT_MANAGEMENT_API.GET_SINGLE_CONNREQ_DETAILS(connectionId), {
         method: "GET",
       })
     );
 
     const details =
-      response?.data?.tuition_details != null
-        ? response.data.tuition_details
+      response?.data?.connection != null
+        ? response.data.connection
         : response?.data;
 
     yield put(fetchAllDetailsSuccess(details));

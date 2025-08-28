@@ -164,18 +164,18 @@ export default function StudentDetails() {
   );
 
   const dispatch = useDispatch();
-  const { student_id, teacher_id } = useLocalSearchParams();
+  const { connection_id } = useLocalSearchParams();
 
   useEffect(() => {
     dispatch({
       type: "GET_ALL_DETAILS",
-      payload: { studentId: student_id, teacherId: teacher_id },
+      payload: { connection_id: connection_id },
     });
-  }, [student_id, teacher_id]);
+  }, [connection_id]);
 
   // derive fields from API shape
   const student = allDetails?.student || {};
-  const tuition_details = allDetails || {};
+  const tuition_details = allDetails?.tuition_details || {};
   const displayStatus =
     allDetails?.status === "pending"
       ? "pending"
