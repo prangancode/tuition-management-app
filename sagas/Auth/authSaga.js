@@ -8,6 +8,9 @@ import {
   registerSuccess,
   registerFailure,
   signedOut,
+  forgotPasswordStart,
+  forgotPasswordSuccess,
+  forgotPasswordFailure,
 } from "../../slices/Auth/authSlice";
 
 import { AUTH_API } from "../../utils/api";
@@ -111,8 +114,31 @@ export function* logoutSaga({ payload }) {
 
   // Navigate back to Welcome
   if (typeof navigate === "function") {
-    const dest = "/(auth)/welcome"; // or "/welcome"
+    const dest = "/(auth)/welcome";
     yield call(navigate, dest);
+  }
+}
+
+function* forgotPasswordSaga({ payload }) {
+  try {
+    const { email } = payload || {};
+    yield put(forgotPasswordStart());
+
+    const res = yield call(fetcher, AUTH_API.FORGOT_PASSWORD, {
+      method: "POST",
+      body: { email },
+      auth: false,
+    });
+
+    yield put(forgotPasswordSuccess());
+    notify.success(
+      "Forgot password",
+      res?.message || "If that email exists, a reset link was sent."
+    );
+  } catch (error) {
+    const message = error?.message || "Failed to send reset link.";
+    yield put(forgotPasswordFailure(message));
+    notify.error("Forgot password", message);
   }
 }
 
@@ -121,4 +147,5 @@ export default function* authSaga() {
   yield takeLatest("LOGIN", loginSaga);
   yield takeLatest("REGISTER", registerSaga);
   yield takeLeading("LOGOUT", logoutSaga);
+  yield takeLatest("FORGOT_PASSWORD", forgotPasswordSaga);
 }

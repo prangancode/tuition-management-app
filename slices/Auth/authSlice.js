@@ -7,6 +7,11 @@ const initialState = {
   loading: false,
   error: null,
   isAuthenticated: false,
+
+  // forgot password
+  forgotLoading: false,
+  forgotError: null,
+  forgotSent: false,
 };
 
 const authSlice = createSlice({
@@ -48,6 +53,29 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.error = null;
     },
+
+    // Forgot password
+    forgotPasswordStart: (state) => {
+      state.forgotLoading = true;
+      state.forgotError = null;
+      state.forgotSent = false;
+    },
+    forgotPasswordSuccess: (state) => {
+      state.forgotLoading = false;
+      state.forgotError = null;
+      state.forgotSent = true;
+    },
+    forgotPasswordFailure: (state, { payload }) => {
+      state.forgotLoading = false;
+      state.forgotError = payload;
+      state.forgotSent = false;
+    },
+    // optional clear (call on screen unmount if you like)
+    clearForgotPasswordState: (state) => {
+      state.forgotLoading = false;
+      state.forgotError = null;
+      state.forgotSent = false;
+    },
   },
 });
 
@@ -59,6 +87,11 @@ export const {
   registerStart,
   registerSuccess,
   registerFailure,
+
+  forgotPasswordStart,
+  forgotPasswordSuccess,
+  forgotPasswordFailure,
+  clearForgotPasswordState,
 } = authSlice.actions;
 
 export default authSlice.reducer;
