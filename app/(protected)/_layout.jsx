@@ -25,6 +25,7 @@ export default function AppLayout() {
         options={{ headerShown: false }}
       />
       <Stack.Screen name="calender" options={{ headerShown: false }} />
+      <Stack.Screen name="profile" options={{ headerShown: false }} />
     </Stack>
   );
 }

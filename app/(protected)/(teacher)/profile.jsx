@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   SafeAreaView,
   View,
@@ -8,9 +8,10 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useRouter } from "expo-router";
 import { signedOut } from "../../../slices/Auth/authSlice";
+import useAuth from "../../../hooks/useAuth";
 
 /* ---------- small helpers ---------- */
 const initialsFrom = (name = "") =>
@@ -63,7 +64,7 @@ const Row = ({ icon, color = "#6B7280", title, subtitle, onPress, right }) => (
 const profile = () => {
   const dispatch = useDispatch();
   const router = useRouter();
-  const { user, role } = useSelector((s) => s.auth) || {};
+  const { user, role } = useAuth();
 
   // dark mode toggle mock (doesn't persist here)
   const [dark, setDark] = useState(false);
@@ -77,7 +78,7 @@ const profile = () => {
 
   /* ----- actions ----- */
   const onEditProfile = () => Alert.alert("Edit Profile", "Coming soon.");
-  const onChangePassword = () => router.push("/settings/change-password"); // create this route later
+  const onChangePassword = () => router.push("/profile/changePassword");
   const onHelp = () =>
     Alert.alert("Help & Support", "Email: support@example.com");
   const onLogout = () => {
