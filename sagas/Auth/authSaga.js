@@ -71,7 +71,7 @@ function* loginSaga({ payload }) {
 
 // Registration Saga
 function* registerSaga({ payload }) {
-  const { registerData, navigate } = payload;
+  const { registerData, navigate } = payload || {};
   try {
     yield put(registerStart());
 
@@ -81,15 +81,15 @@ function* registerSaga({ payload }) {
       auth: false,
     });
 
-    const data = response?.data || response;
-    if (data?.status && data.status !== "success") {
-      throw new Error(data.message || "Registration failed.");
-    }
+    // const data = response?.data || response;
+    // if (data?.status && data.status !== "success") {
+    //   throw new Error(data.message || "Registration failed.");
+    // }
 
-    yield put(registerSuccess(data));
+    yield put(registerSuccess());
     notify.success("Registration success", response?.message);
 
-    // Navigate to login
+    // Navigate to sign in
     if (navigate) {
       yield call(navigate, "/(auth)/signIn");
     }

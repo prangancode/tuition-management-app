@@ -9,6 +9,8 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
+  useWindowDimensions,
+  Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useDispatch, useSelector } from "react-redux";
@@ -21,7 +23,10 @@ const isBDPhone = (p = "") => /^01\d{9}$/.test(p); // exactly 11 digits, starts 
 const signUp = () => {
   const dispatch = useDispatch();
   const router = useRouter();
-  const { loading, error } = useSelector((s) => s.auth);
+  const { loading } = useSelector((s) => s.auth);
+  const { width } = useWindowDimensions();
+
+  const bannerHeight = Math.min(280, Math.max(160, Math.round(width * 0.5)));
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -81,9 +86,23 @@ const signUp = () => {
       >
         <ScrollView
           contentContainerStyle={{ flexGrow: 1 }}
+          showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           className="px-5"
         >
+          {/* Hero Image */}
+          <View className="mt-8 mb-4">
+            <View className="bg-green-50 border border-green-100 rounded-3xl overflow-hidden">
+              <Image
+                source={require("../../assets/images/auth/sign_up.png")}
+                style={{ width: "100%", height: bannerHeight }}
+                resizeMode="contain"
+                accessible
+                accessibilityLabel="Join us — sign up illustration"
+              />
+            </View>
+          </View>
+
           {/* Header */}
           <View className="mt-10 mb-6">
             <Text className="text-3xl font-bold text-gray-900">

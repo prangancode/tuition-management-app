@@ -38,11 +38,10 @@ const authSlice = createSlice({
       state.loading = true;
       state.error = null;
     },
-    registerSuccess: (state, { payload }) => {
+    registerSuccess: (state) => {
       state.loading = false;
-      state.user = payload.user;
-      state.token = payload.token;
-      state.isAuthenticated = true;
+      state.error = null;
+      // state.user = payload.user;
     },
     registerFailure: (state, { payload }) => {
       state.loading = false;
