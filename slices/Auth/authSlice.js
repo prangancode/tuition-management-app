@@ -13,6 +13,12 @@ const initialState = {
   forgotLoading: false,
   forgotError: null,
   forgotSent: false,
+
+  // change password
+
+  changeLoading: false,
+  changeError: null,
+  changeSuccess: false,
 };
 
 const authSlice = createSlice({
@@ -77,6 +83,29 @@ const authSlice = createSlice({
       state.forgotError = null;
       state.forgotSent = false;
     },
+
+    // Change password
+
+    changePasswordStart: (state) => {
+      state.changeLoading = true;
+      state.changeError = null;
+      state.changeSuccess = false;
+    },
+    changePasswordSuccess: (state) => {
+      state.changeLoading = false;
+      state.changeError = null;
+      state.changeSuccess = true;
+    },
+    changePasswordFailure: (state, { payload }) => {
+      state.changeLoading = false;
+      state.changeError = payload;
+      state.changeSuccess = false;
+    },
+    clearChangePasswordState: (state) => {
+      state.changeLoading = false;
+      state.changeError = null;
+      state.changeSuccess = false;
+    },
   },
 });
 
@@ -93,6 +122,11 @@ export const {
   forgotPasswordSuccess,
   forgotPasswordFailure,
   clearForgotPasswordState,
+
+  changePasswordStart,
+  changePasswordSuccess,
+  changePasswordFailure,
+  clearChangePasswordState,
 } = authSlice.actions;
 
 export default authSlice.reducer;

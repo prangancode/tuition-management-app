@@ -11,6 +11,9 @@ import {
   forgotPasswordStart,
   forgotPasswordSuccess,
   forgotPasswordFailure,
+  changePasswordStart,
+  changePasswordSuccess,
+  changePasswordFailure,
 } from "../../slices/Auth/authSlice";
 
 import { AUTH_API } from "../../utils/api";
@@ -146,10 +149,37 @@ function* forgotPasswordSaga({ payload }) {
   }
 }
 
+// in your auth saga file
+function* changePasswordSaga({ payload }) {
+  const { data } = payload || {};
+  try {
+    // start
+    yield put(changePasswordStart());
+
+    const res = yield call(fetcher, AUTH_API.CHANGE_PASSWORD, {
+      method: "POST",
+      body: data,
+    });
+
+    // success
+    yield put(changePasswordSuccess());
+    notify.success(
+      "Password changed",
+      res?.message || "Password updated successfully."
+    );
+  } catch (error) {
+    const message = error?.message || "Unable to change password.";
+    yield put(changePasswordFailure(message));
+    notify.error("Change password failed", message);
+  }
+}
+
 // Root Auth Saga
 export default function* authSaga() {
   yield takeLatest("LOGIN", loginSaga);
   yield takeLatest("REGISTER", registerSaga);
   yield takeLeading("LOGOUT", logoutSaga);
   yield takeLatest("FORGOT_PASSWORD", forgotPasswordSaga);
+
+  yield takeLatest("CHANGE_PASSWORD", changePasswordSaga);
 }
