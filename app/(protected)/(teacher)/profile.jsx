@@ -10,7 +10,6 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useDispatch } from "react-redux";
 import { useRouter } from "expo-router";
-import { signedOut } from "../../../slices/Auth/authSlice";
 import useAuth from "../../../hooks/useAuth";
 
 /* ---------- small helpers ---------- */
@@ -82,9 +81,10 @@ const profile = () => {
   const onHelp = () =>
     Alert.alert("Help & Support", "Email: support@example.com");
   const onLogout = () => {
-    // simple mock logout (adjust if you have a LOGOUT saga)
-    dispatch(signedOut());
-    router.replace("/(auth)/signIn");
+    dispatch({
+      type: "LOGOUT",
+      payload: { navigate: (p) => router.replace(p) },
+    });
   };
 
   return (

@@ -116,6 +116,10 @@ export function* logoutSaga({ payload }) {
   yield call(clearToken);
   yield put(signedOut());
 
+  if (!reason) {
+    notify.success("Logged out", "You have been logged out.");
+  }
+
   // OPTIONAL: wipe persisted state (hard reset)
   yield call(purgeStoredState, authPersistConfig);
 

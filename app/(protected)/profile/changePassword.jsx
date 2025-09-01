@@ -9,15 +9,18 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Image,
+  useWindowDimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useDispatch, useSelector } from "react-redux";
+import { useRouter } from "expo-router";
 
 const changePassword = () => {
   const dispatch = useDispatch();
-  const { changeLoading, changeError, changeSuccess } = useSelector(
-    (s) => s.auth
-  );
+  const router = useRouter();
+  const { width } = useWindowDimensions();
+  const { changeLoading } = useSelector((s) => s.auth);
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -60,14 +63,7 @@ const changePassword = () => {
     });
   };
 
-  useEffect(() => {
-    if (changeSuccess) {
-      // clear local fields on success
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirm("");
-    }
-  }, [changeSuccess]);
+  const bannerHeight = Math.min(280, Math.max(160, Math.round(width * 0.5)));
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -80,15 +76,35 @@ const changePassword = () => {
           keyboardShouldPersistTaps="handled"
           className="px-5"
         >
-          {/* Header */}
-          <View className="mt-8 mb-4">
-            <Text className="text-3xl font-bold text-gray-900">
+          {/* Top bar with back button */}
+          <View className="flex-row items-center mt-3 mb-3">
+            <Pressable
+              onPress={() => router.back()}
+              className="w-10 h-10 rounded-xl bg-gray-100 items-center justify-center"
+            >
+              <Ionicons name="arrow-back" size={20} color="#111827" />
+            </Pressable>
+            <Text className="ml-3 text-xl font-semibold text-gray-900">
               Change password
             </Text>
-            <Text className="text-gray-500 mt-1">
-              Keep your account secure by updating your password.
-            </Text>
           </View>
+
+          {/* Hero image */}
+          <View className="mb-4">
+            <View className="rounded-3xl overflow-hidden bg-green-50 border border-green-100">
+              <Image
+                source={require("../../../assets/images/changePassword/changePassword.png")}
+                style={{ width: "100%", height: bannerHeight }}
+                resizeMode="contain"
+                accessible
+                accessibilityLabel="Secure password illustration"
+              />
+            </View>
+          </View>
+
+          <Text className="text-gray-500 mb-3">
+            Keep your account secure by updating your password.
+          </Text>
 
           {/* Card */}
           <View className="bg-white rounded-2xl p-5 shadow-[0_6px_30px_rgba(0,0,0,0.08)] border border-gray-100">
@@ -197,11 +213,6 @@ const changePassword = () => {
               ) : null}
             </View>
 
-            {/* Backend error */}
-            {changeError ? (
-              <Text className="text-red-600 text-xs mt-2">{changeError}</Text>
-            ) : null}
-
             {/* Submit */}
             <Pressable
               onPress={onSubmit}
@@ -222,13 +233,11 @@ const changePassword = () => {
               )}
             </Pressable>
 
-            {/* Hint */}
             <Text className="text-gray-400 text-xs text-center mt-3">
               Pro tip: use a unique passphrase you haven’t used elsewhere.
             </Text>
           </View>
 
-          {/* Footer spacing */}
           <View className="h-8" />
         </ScrollView>
       </KeyboardAvoidingView>
