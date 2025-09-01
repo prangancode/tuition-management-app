@@ -71,7 +71,7 @@ function* loginSaga({ payload }) {
 
 // Registration Saga
 function* registerSaga({ payload }) {
-  const { registerData } = payload;
+  const { registerData, navigate } = payload;
   try {
     yield put(registerStart());
 
@@ -88,7 +88,11 @@ function* registerSaga({ payload }) {
 
     yield put(registerSuccess(data));
     notify.success("Registration success", response?.message);
-    // usually navigate handled in component after success
+
+    // Navigate to login
+    if (navigate) {
+      yield call(navigate, "/(auth)/signIn");
+    }
   } catch (error) {
     const message = error.message || "Registration failed.";
     notify.error("Registration failed", message);
