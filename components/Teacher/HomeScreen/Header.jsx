@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Feather, Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 import useAuth from "../../../hooks/useAuth";
 import InitialsAvatar from "../../ui/InitialsAvatar";
 
@@ -16,9 +15,8 @@ function getGreeting(d = new Date()) {
 export default function Header() {
   const [greeting, setGreeting] = useState(getGreeting());
   const { user } = useAuth();
-  const router = useRouter();
 
-  const displayName = user?.name || "JT";
+  const displayName = user?.name || "Teacher";
 
   useEffect(() => {
     const id = setInterval(() => setGreeting(getGreeting()), 60 * 1000);
