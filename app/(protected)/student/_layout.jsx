@@ -19,7 +19,7 @@ export default function StudentTabs() {
           ),
         }}
       />
-      <Tabs.Screen
+      {/* <Tabs.Screen
         name="studentSchedule"
         options={{
           title: "Schedule",
@@ -27,17 +27,13 @@ export default function StudentTabs() {
             <Ionicons name="calendar-outline" size={24} color={color} />
           ),
         }}
-      />
+      /> */}
       <Tabs.Screen
-        name="studentMessages"
+        name="profile"
         options={{
-          title: "Messages",
+          title: "Profile",
           tabBarIcon: ({ color }) => (
-            <Ionicons
-              name="chatbubble-ellipses-outline"
-              size={24}
-              color={color}
-            />
+            <Ionicons name="person-circle-outline" size={24} color={color} />
           ),
         }}
       />

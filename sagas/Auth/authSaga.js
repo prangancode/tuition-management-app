@@ -62,7 +62,8 @@ function* loginSaga({ payload }) {
 
     // role-based redirect
     if (navigate) {
-      const dest = data?.user?.role === "teacher" ? "/" : "/home";
+      // const dest = data?.user?.role === "teacher" ? "/" : "/home";
+      const dest = "/";
       yield call(navigate, dest);
     }
   } catch (error) {
