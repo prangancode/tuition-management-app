@@ -7,18 +7,23 @@ import TodaysSchedule from "../../../components/Teacher/HomeScreen/TodaysSchedul
 import RecentActivity from "../../../components/Teacher/HomeScreen/RecentActivity";
 import { useDispatch, useSelector } from "react-redux";
 
+import { useCallback } from "react";
+import { useFocusEffect } from "expo-router";
+
 const HomeScreen = () => {
   const dispatch = useDispatch();
 
-  const { meta, overview, stats, schedule_today } = useSelector(
+  const { overview, stats, schedule_today } = useSelector(
     (state) => state.teacherHomeData
   );
 
   // dispatching fetchTeacherHomeData action to load data when component mounts
 
-  useEffect(() => {
-    dispatch({ type: "teacherHomeData" });
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      dispatch({ type: "teacherHomeData" });
+    }, [dispatch])
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-white">
